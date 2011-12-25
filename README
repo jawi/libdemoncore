@@ -1,0 +1,5 @@
+# LibDemonCore
+
+A utility library written in Java for handling the "demon core" SUMP
+extension. Contains a simple UI for configuring triggers and terms.
+
