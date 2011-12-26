@@ -126,10 +126,8 @@ public class TriggerSumPanel extends JPanel
    */
   private void buildPanel()
   {
-    final Insets insets = new Insets( 0, 0, 0, 0 );
-
     GridBagConstraints gbc = new GridBagConstraints( 0, 0, 1, 1, 1.0, 1.0, GridBagConstraints.CENTER,
-        GridBagConstraints.NONE, insets, 0, 0 );
+        GridBagConstraints.NONE, new Insets( 0, 0, 0, 0 ), 0, 0 );
 
     // First column...
     gbc.gridx = 0;

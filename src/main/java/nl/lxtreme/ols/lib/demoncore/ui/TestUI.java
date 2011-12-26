@@ -68,7 +68,8 @@ public class TestUI extends JFrame
     setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
     setSize( 640, 480 );
 
-    getContentPane().add( new TriggerSumPanel() );
+    // getContentPane().add( new TriggerSumPanel() );
+    getContentPane().add( new TriggerSequencePanel( 2 ) );
   }
 
   /**
