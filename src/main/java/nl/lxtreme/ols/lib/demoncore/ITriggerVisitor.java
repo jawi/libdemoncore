@@ -25,29 +25,39 @@ import java.io.*;
 
 
 /**
- * Allows writing to a stream.
+ * Provides an interface for visitors of trigger(part)s.
  */
 public interface ITriggerVisitor
 {
   // METHODS
 
   /**
-   * Selects a LUT chain by a given address.
-   * 
-   * @param aLutChainAddress
-   *          the address of the LUT chain to select.
-   * @throws IOException
-   *           in case of I/O problems.
+   * @param aTerm
    */
-  void selectChain( int aLutChainAddress ) throws IOException;
+  void visitFinalTerm( TriggerFinalTerm aTerm ) throws IOException;
 
   /**
-   * Writes to a LUT chain.
-   * 
-   * @param aLutChainData
-   *          the LUT chain data to write.
-   * @throws IOException
-   *           in case of I/O problems.
+   * @param aTerm
    */
-  void writeChain( int aLutChainData ) throws IOException;
+  void visitInputTerm( TriggerInputTerm aTerm ) throws IOException;
+
+  /**
+   * @param aTerm
+   */
+  void visitMidTerm( TriggerMidTerm aTerm ) throws IOException;
+
+  /**
+   * @param aTerm
+   */
+  void visitTerm( AbstractTriggerTerm aTerm ) throws IOException;
+
+  /**
+   * @param aTriggerSequenceState
+   */
+  void visitTriggerSequence( TriggerSequenceState aTriggerSequenceState ) throws IOException;
+
+  /**
+   * @param aSum
+   */
+  void visitTriggerSum( TriggerSum aSum ) throws IOException;
 }

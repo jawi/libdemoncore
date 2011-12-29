@@ -21,30 +21,46 @@
 package nl.lxtreme.ols.lib.demoncore;
 
 
-import java.io.*;
-
-
 /**
- * 
+ * Denotes the state of a input term for a trigger.
  */
-public class Trigger implements ITriggerVisitable
+public enum TriggerInputState
 {
-  // VARIABLES
+  // CONSTANTS
 
-  private TriggerTerm[] terms;
-  private int[] masks;
-  private int[] values;
+  /** Input is enabled (non-inverted). */
+  ENABLED,
+  /** Input is enabled (inverted). */
+  ENABLED_INVERTED,
+  /** Input is disabled. */
+  DISABLED;
 
   // METHODS
 
   /**
-   * {@inheritDoc}
+   * @return <code>true</code> if this trigger input is {@link #DISABLED},
+   *         <code>false</code> otherwise.
    */
-  @Override
-  public void accept( final ITriggerVisitor aVisitor ) throws IOException
+  public boolean isDisabled()
   {
-    // TODO Auto-generated method stub
-
+    return !isEnabled();
   }
 
+  /**
+   * @return <code>true</code> if this trigger input is either {@link #ENABLED}
+   *         or {@link #ENABLED_INVERTED}, <code>false</code> otherwise.
+   */
+  public boolean isEnabled()
+  {
+    return ( this == ENABLED ) || ( this == ENABLED_INVERTED );
+  }
+
+  /**
+   * @return <code>true</code> if this trigger input is
+   *         {@link #ENABLED_INVERTED}, <code>false</code> otherwise.
+   */
+  public boolean isInverted()
+  {
+    return this == ENABLED_INVERTED;
+  }
 }

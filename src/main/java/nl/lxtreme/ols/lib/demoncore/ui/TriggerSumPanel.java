@@ -238,6 +238,7 @@ public class TriggerSumPanel extends JPanel
 
   // VARIABLES
 
+  private final TriggerMode mode;
   private UIElement<?>[] inputStages;
   private UIElement<?>[] pairValueStages;
   private UIElement<?>[] quadValueStages;
@@ -247,10 +248,16 @@ public class TriggerSumPanel extends JPanel
 
   /**
    * Creates a new {@link TriggerSumPanel} instance.
+   * 
+   * @param aMode
+   *          the trigger mode, whether we're displaying states or timing
+   *          values.
    */
-  public TriggerSumPanel()
+  public TriggerSumPanel( final TriggerMode aMode )
   {
     super( new GridBagLayout() );
+
+    this.mode = aMode;
 
     initPanel();
     buildPanel();

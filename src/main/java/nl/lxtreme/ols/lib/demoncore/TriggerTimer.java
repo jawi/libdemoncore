@@ -20,36 +20,71 @@
  */
 package nl.lxtreme.ols.lib.demoncore;
 
-/**
- * Denotes one of the two timer-triggers.
- */
-public enum TriggerTimer
-{
-  /** The first timer-trigger. */
-  TIMER_1( 0x38 ), //
-  /** The second timer-trigger. */
-  TIMER_2( 0x3A );
 
-  private final int lutChainAddress;
+/**
+ * Denotes a trigger timer.
+ */
+public class TriggerTimer extends AbstractTriggerTerm
+{
+  // VARIABLES
+
+  private long value;
+
+  // CONSTRUCTORS
 
   /**
    * Creates a new TriggerTimer instance.
    * 
-   * @param aLutChainAddress
-   *          the LUT chain address to use.
+   * @param aType
+   *          the type of this trigger timer, cannot be <code>null</code>.
    */
-  private TriggerTimer( final int aLutChainAddress )
+  public TriggerTimer( final TriggerTermType aType )
   {
-    this.lutChainAddress = aLutChainAddress;
+    super( aType );
   }
 
   /**
-   * Returns the current value of lutChainAddress.
+   * Creates a new TriggerTimer instance as an exact copy of the given term.
    * 
-   * @return the LUT chain address, never <code>null</code>.
+   * @param aTerm
+   *          the term to copy, cannot be <code>null</code>.
    */
-  public int getLutChainAddress()
+  public TriggerTimer( final TriggerTimer aTerm )
   {
-    return this.lutChainAddress;
+    super( aTerm );
+    this.value = aTerm.value;
+  }
+
+  // METHODS
+
+  /**
+   * Returns the current value of value.
+   * 
+   * @return the value
+   */
+  public long getValue()
+  {
+    return this.value;
+  }
+
+  /**
+   * Sets value to the given value.
+   * 
+   * @param aValue
+   *          the value to set.
+   */
+  public void setValue( final long aValue )
+  {
+    this.value = aValue;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  protected void reset()
+  {
+    super.reset();
+    this.value = 0L;
   }
 }

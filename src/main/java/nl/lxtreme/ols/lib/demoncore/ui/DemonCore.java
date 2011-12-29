@@ -1,4 +1,6 @@
 package nl.lxtreme.ols.lib.demoncore.ui;
+
+
 /*
  * OpenBench LogicSniffer / SUMP project 
  *
@@ -59,7 +61,9 @@ public class DemonCore extends ResourceBundle
 
   private static final Object[][] CONTENTS = {
       // Trigger sequence resources...
-      { "rSequenceLevel", "Sequence level %d" }, //
+      { "rTIME", "Timing" }, //
+      { "rSTATE", "State" }, //
+      { "rSequenceLevel", "%s sequence level %d" }, //
       { "rWhileStoring", "While storing" }, //
       { "rIfTarget", "If target" }, //
       { "rOccurs", "occurs for" }, //

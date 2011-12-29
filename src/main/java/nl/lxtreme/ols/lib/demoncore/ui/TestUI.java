@@ -23,6 +23,8 @@ package nl.lxtreme.ols.lib.demoncore.ui;
 
 import javax.swing.*;
 
+import nl.lxtreme.ols.lib.demoncore.*;
+
 
 /**
  * 
@@ -68,8 +70,19 @@ public class TestUI extends JFrame
     setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
     setSize( 640, 480 );
 
-    getContentPane().add( new TriggerSumPanel() );
-    // getContentPane().add( new TriggerSequencePanel( 2 ) );
+    final TriggerSequenceState seqState = new TriggerSequenceState();
+    seqState.setStateNumber( 1 );
+    seqState.getCaptureTerms().getInputTerms()[0].getTermA().setEnabled();
+    seqState.getCaptureTerms().getInputTerms()[0].getTermB().setInverted();
+    seqState.getCaptureTerms().getInputTerms()[0].setOperation( TriggerOperation.AND );
+    seqState.getCaptureTerms().getInputTerms()[1].getTermB().setEnabled();
+    seqState.getCaptureTerms().getInputTerms()[1].setOperation( TriggerOperation.OR );
+    seqState.getCaptureTerms().getMidTerms()[0].setOperation( TriggerOperation.OR );
+    seqState.getHitTerms().getInputTerms()[0].getTermA().setEnabled();
+    seqState.getHitTerms().getInputTerms()[0].setOperation( TriggerOperation.ANY );
+
+    // getContentPane().add( new TriggerSumPanel( TriggerMode.STATE ) );
+    getContentPane().add( new TriggerSequencePanel( TriggerMode.STATE, seqState ) );
   }
 
   /**

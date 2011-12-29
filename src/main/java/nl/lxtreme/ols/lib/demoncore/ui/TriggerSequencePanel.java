@@ -23,9 +23,13 @@ package nl.lxtreme.ols.lib.demoncore.ui;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.io.*;
 import java.util.*;
+import java.util.List;
 
 import javax.swing.*;
+
+import nl.lxtreme.ols.lib.demoncore.*;
 
 
 /**
@@ -36,14 +40,279 @@ public class TriggerSequencePanel extends JPanel
 {
   // CONSTANTS
 
+  /**
+   * Converts a {@link TriggerSum} to a single, human readable, string
+   * representation.
+   */
+  static final class TriggerSumStringifier implements ITriggerVisitor
+  {
+    // CONSTANTS
+
+    private static final boolean USE_NEGATION_LINE = true;
+
+    private static final String NEGATE = "\u0305";
+    private static final String NOT = "\u00AC";
+
+    // VARIABLES
+
+    private final Stack<String> symStack = new Stack<String>();
+
+    // METHODS
+
+    /**
+     * Converts a given {@link TriggerSum} to a human readable string
+     * representation.
+     * 
+     * @param aTriggerSum
+     *          the trigger sum to convert to a string representation, cannot be
+     *          <code>null</code>.
+     * @return a human readable string representation of the given trigger sum,
+     *         or an empty string if the given trigger sum did not provide any
+     *         terms.
+     */
+    public String toString( final TriggerSum aTriggerSum )
+    {
+      this.symStack.clear();
+
+      try
+      {
+        aTriggerSum.accept( this );
+      }
+      catch ( IOException exception )
+      {
+        exception.printStackTrace();
+      }
+
+      final StringBuilder sb = new StringBuilder();
+      while ( !this.symStack.isEmpty() )
+      {
+        sb.insert( 0, this.symStack.pop() );
+      }
+
+      return sb.toString();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void visitFinalTerm( final TriggerFinalTerm aTerm ) throws IOException
+    {
+      int depth = this.symStack.size();
+
+      aTerm.getTermB().accept( this );
+      aTerm.getTermA().accept( this );
+
+      // Walk across the stack and simplify its entries...
+      walkSymbolStack( aTerm.getOperation(), depth );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void visitInputTerm( final TriggerInputTerm aTerm ) throws IOException
+    {
+      int depth = this.symStack.size();
+
+      // Visit the terms individually first...
+      aTerm.getTermB().accept( this );
+      aTerm.getTermA().accept( this );
+
+      // Walk across the stack and simplify its entries...
+      walkSymbolStack( aTerm.getOperation(), depth );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void visitMidTerm( final TriggerMidTerm aTerm ) throws IOException
+    {
+      int depth = this.symStack.size();
+
+      // Visit the terms individually first...
+      aTerm.getTermD().accept( this );
+      aTerm.getTermC().accept( this );
+      aTerm.getTermB().accept( this );
+      aTerm.getTermA().accept( this );
+
+      // Walk across the stack and simplify its entries...
+      walkSymbolStack( aTerm.getOperation(), depth );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void visitTerm( final AbstractTriggerTerm aTerm ) throws IOException
+    {
+      if ( !aTerm.isDisabled() )
+      {
+        this.symStack.push( asString( aTerm ) );
+      }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void visitTriggerSequence( final TriggerSequenceState aTriggerSequenceState ) throws IOException
+    {
+      // NO-op
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void visitTriggerSum( final TriggerSum aSum ) throws IOException
+    {
+      // NO-op
+    }
+
+    /**
+     * Converts the given term to a string representation.
+     * 
+     * @param aTerm
+     *          the trigger term to convert to string, cannot be
+     *          <code>null</code>.
+     * @return a string representation of the given term, never
+     *         <code>null</code>.
+     */
+    private String asString( final AbstractTriggerTerm aTerm )
+    {
+      StringBuilder sb = new StringBuilder( RB.getString( aTerm.getType().getResourceKey() ) );
+      if ( aTerm.isInverted() )
+      {
+        if ( !USE_NEGATION_LINE || ( sb.length() > 1 ) )
+        {
+          sb.insert( 0, NOT );
+        }
+        else
+        {
+          sb.append( NEGATE );
+        }
+      }
+      return sb.toString();
+    }
+
+    /**
+     * Combines a given list of terms with the given trigger operation into a
+     * single string representation.
+     * 
+     * @param aTermList
+     *          the list of terms, can be empty, but never <code>null</code>;
+     * @param aOperation
+     *          the trigger operation to apply to each term, cannot be
+     *          <code>null</code>.
+     * @return a string representation, can be <code>null</code> if the given
+     *         term list is empty.
+     */
+    private String asString( final List<String> aTermList, final TriggerOperation aOperation )
+    {
+      if ( aTermList.isEmpty() )
+      {
+        return null;
+      }
+
+      final String opName = asString( aOperation );
+
+      StringBuilder sb = new StringBuilder();
+      for ( String term : aTermList )
+      {
+        if ( sb.length() > 0 )
+        {
+          sb.append( ' ' ).append( opName ).append( ' ' );
+        }
+        sb.append( term );
+      }
+
+      String result = sb.toString().trim();
+      if ( ( aTermList.size() > 1 ) || aOperation.isInverted() )
+      {
+        result = "(".concat( result.concat( ")" ) );
+      }
+      if ( aOperation.isInverted() )
+      {
+        result = NOT.concat( result );
+      }
+
+      return result;
+    }
+
+    /**
+     * Converts the given trigger operation to a string representation.
+     * 
+     * @param aOperation
+     *          the operation to convert, cannot be <code>null</code>.
+     * @return the string representation of the given operation, never
+     *         <code>null</code>.
+     */
+    private String asString( final TriggerOperation aOperation )
+    {
+      switch ( aOperation )
+      {
+        case A_ONLY:
+        case B_ONLY:
+          return "";
+
+        case ANY:
+          return "any state";
+
+        case NOP:
+          return "no state";
+
+        case NAND:
+        case AND:
+          return "\u22C5"; // middle dot
+
+        case NOR:
+        case OR:
+          return "+"; // plus symbol
+
+        case NXOR:
+        case XOR:
+          return "\u2295"; // circled plus
+
+        default:
+          throw new IllegalArgumentException();
+      }
+    }
+
+    /**
+     * @param symStack
+     * @param aTerm
+     */
+    private void walkSymbolStack( final TriggerOperation aOperation, final int aDepth )
+    {
+      List<String> terms = new ArrayList<String>();
+      while ( !this.symStack.isEmpty() && ( this.symStack.size() > aDepth ) )
+      {
+        terms.add( this.symStack.pop() );
+      }
+
+      String value = asString( terms, aOperation );
+      if ( ( value != null ) && ( value.length() > 0 ) )
+      {
+        this.symStack.push( value );
+      }
+    }
+  }
+
+  // CONSTANTS
+
   private static final long serialVersionUID = 1L;
 
   private static final ResourceBundle RB = ResourceBundle.getBundle( "nl.lxtreme.ols.lib.demoncore.ui.DemonCore" );
 
   // VARIABLES
 
-  private final Integer level;
+  private final TriggerSumStringifier triggerSumStringifier;
+  private final TriggerSequenceState model;
+  private final TriggerMode mode;
 
+  private JLabel title;
   private JButton captureTerm;
   private JButton hitTerm;
   private JButton elseTerm;
@@ -57,20 +326,37 @@ public class TriggerSequencePanel extends JPanel
   /**
    * Creates a new TriggerSequencePanel instance.
    * 
-   * @param aLevel
-   *          the trigger sequence level, >= 0 && < 16.
+   * @param aMode
+   *          the trigger mode, whether we're displaying states or timing
+   *          values;
+   * @param aModel
+   *          the trigger sequence state model to use in this panel, cannot be
+   *          <code>null</code>.
    */
-  public TriggerSequencePanel( final int aLevel )
+  public TriggerSequencePanel( final TriggerMode aMode, final TriggerSequenceState aModel )
   {
     super( new GridBagLayout() );
 
-    this.level = Integer.valueOf( aLevel );
+    this.mode = aMode;
+    // Create a copy of the given model as to not directly modify it!!!
+    this.model = new TriggerSequenceState( aModel );
+    this.triggerSumStringifier = new TriggerSumStringifier();
 
     initPanel();
     buildPanel();
   }
 
   // METHODS
+
+  /**
+   * Returns the current (possibly modified!) trigger sequence state.
+   * 
+   * @return the trigger sequence state, never <code>null</code>.
+   */
+  public TriggerSequenceState getTriggerSequence()
+  {
+    return this.model;
+  }
 
   /**
    * Builds this panel by placing all components on it.
@@ -83,7 +369,7 @@ public class TriggerSequencePanel extends JPanel
     gbc.weighty = 0.0;
     gbc.insets = new Insets( 8, 8, 0, 8 );
 
-    add( new JLabel( String.format( RB.getString( "rSequenceLevel" ), this.level ) ), gbc );
+    add( this.title, gbc );
 
     gbc.gridy = 1;
     gbc.weighty = 1.0;
@@ -234,19 +520,32 @@ public class TriggerSequencePanel extends JPanel
   }
 
   /**
+   * @param aTriggerSum
+   * @return
+   */
+  private String getTriggerSumString( final TriggerSum aTriggerSum )
+  {
+    return this.triggerSumStringifier.toString( aTriggerSum );
+  }
+
+  /**
    * Initializes all (sub)components used in this component.
    */
   private void initPanel()
   {
-    this.captureTerm = new JButton( "..." );
-    this.hitTerm = new JButton( "..." );
-    this.elseTerm = new JButton( "..." );
+    final String modeStr = RB.getString( "r".concat( this.mode.name() ) );
+    final Integer stateNr = Integer.valueOf( this.model.getStateNumber() );
+    this.title = new JLabel( String.format( RB.getString( "rSequenceLevel" ), modeStr, stateNr ) );
+
+    this.captureTerm = new JButton( getTriggerSumString( this.model.getCaptureTerms() ) );
+    this.hitTerm = new JButton( getTriggerSumString( this.model.getHitTerms() ) );
+    this.elseTerm = new JButton( getTriggerSumString( this.model.getElseTerms() ) );
 
     this.setTrigger = new JCheckBox( RB.getString( "rSetTrigger" ) );
     this.timerControl = new JButton( RB.getString( "rTimerControl" ) );
 
     this.occurenceCount = new JTextField( "1", 3 );
-    this.gotoLevel = new JTextField( "" + ( this.level.intValue() + 1 ), 3 );
+    this.gotoLevel = new JTextField( "" + ( stateNr.intValue() + 1 ), 3 );
 
     // Initialize listeners...
     this.setTrigger.addItemListener( new ItemListener()

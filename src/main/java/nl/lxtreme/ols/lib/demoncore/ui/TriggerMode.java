@@ -18,19 +18,13 @@
  * Copyright (C) 2006-2010 Michael Poppitz, www.sump.org
  * Copyright (C) 2010 J.W. Janssen, www.lxtreme.nl
  */
-package nl.lxtreme.ols.lib.demoncore;
+package nl.lxtreme.ols.lib.demoncore.ui;
 
 
 /**
- * Builder for a complete trigger.
+ * Denotes whether we're using time or state values.
  */
-public class TriggerBuilder
+public enum TriggerMode
 {
-  // METHODS
-
-  public TriggerBuilder defineTerm( final TriggerTerm aTerm, final int aTarget, final int aMask )
-  {
-    return this;
-  }
-
+  TIME, STATE;
 }

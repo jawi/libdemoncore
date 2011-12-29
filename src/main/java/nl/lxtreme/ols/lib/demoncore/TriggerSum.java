@@ -22,6 +22,7 @@ package nl.lxtreme.ols.lib.demoncore;
 
 
 import java.io.*;
+import java.util.*;
 
 
 /**
@@ -29,11 +30,22 @@ import java.io.*;
  */
 public final class TriggerSum implements ITriggerVisitable
 {
+  // CONSTANTS
+
+  /** The order in which the terms are inputted. */
+  private static final TriggerTermType[] TERMS = { TriggerTermType.TERM_A, TriggerTermType.TERM_B,
+      TriggerTermType.TERM_C, TriggerTermType.TERM_RANGE1, TriggerTermType.TERM_D, TriggerTermType.TERM_EDGE1,
+      TriggerTermType.TERM_E, TriggerTermType.TERM_TIMER1, TriggerTermType.TERM_F, TriggerTermType.TERM_G,
+      TriggerTermType.TERM_H, TriggerTermType.TERM_RANGE2, TriggerTermType.TERM_I, TriggerTermType.TERM_EDGE2,
+      TriggerTermType.TERM_J, TriggerTermType.TERM_TIMER2 };
+
   // VARIABLES
 
-  private final TriggerStateTerm stateTerm;
   private int stateNumber;
-  private TriggerTerms triggerTerms;
+  private final TriggerStateTerm stateTerm;
+  private final TriggerInputTerm[] inputTerms;
+  private final TriggerMidTerm[] midTerms;
+  private final TriggerFinalTerm finalTerm;
 
   // CONSTRUCTORS
 
@@ -43,9 +55,27 @@ public final class TriggerSum implements ITriggerVisitable
    * @param aStateTerm
    *          the trigger state term this sum represents.
    */
-  TriggerSum( final TriggerStateTerm aStateTerm )
+  public TriggerSum( final TriggerStateTerm aStateTerm )
   {
     this.stateTerm = aStateTerm;
+
+    // Create the terms structure...
+    this.inputTerms = new TriggerInputTerm[TERMS.length / 2];
+    for ( int i = 0, j = 0; i < TERMS.length; i += 2, j++ )
+    {
+      final AbstractTriggerTerm termA = AbstractTriggerTerm.create( TERMS[i] );
+      final AbstractTriggerTerm termB = AbstractTriggerTerm.create( TERMS[i + 1] );
+      this.inputTerms[j] = new TriggerInputTerm( termA, termB );
+    }
+
+    this.midTerms = new TriggerMidTerm[2];
+    for ( int i = 0, j = 0; i < ( TERMS.length / 2 ); i += 4, j++ )
+    {
+      this.midTerms[j] = new TriggerMidTerm( this.inputTerms[i], this.inputTerms[i + 1], this.inputTerms[i + 2],
+          this.inputTerms[i + 3] );
+    }
+
+    this.finalTerm = new TriggerFinalTerm( this.midTerms[0], this.midTerms[1] );
 
     reset();
   }
@@ -57,11 +87,19 @@ public final class TriggerSum implements ITriggerVisitable
    * @param aSum
    *          the trigger sum to copy, cannot be <code>null</code>.
    */
-  TriggerSum( final TriggerSum aSum )
+  public TriggerSum( final TriggerSum aSum )
   {
     this.stateTerm = aSum.stateTerm;
     this.stateNumber = aSum.stateNumber;
-    this.triggerTerms = aSum.triggerTerms;
+    this.inputTerms = Arrays.copyOf( aSum.inputTerms, aSum.inputTerms.length ); // XXX
+                                                                                // copy
+                                                                                // individual
+                                                                                // terms!
+    this.midTerms = Arrays.copyOf( aSum.midTerms, aSum.midTerms.length ); // XXX
+                                                                          // copy
+                                                                          // individual
+                                                                          // terms!
+    this.finalTerm = new TriggerFinalTerm( aSum.finalTerm );
   }
 
   // METHODS
@@ -72,9 +110,38 @@ public final class TriggerSum implements ITriggerVisitable
   @Override
   public void accept( final ITriggerVisitor aVisitor ) throws IOException
   {
-    aVisitor.selectChain( 0x40 + ( this.stateNumber * 4 ) + this.stateTerm.getOffset() );
+    aVisitor.visitTriggerSum( this );
+    this.finalTerm.accept( aVisitor );
+  }
 
-    this.triggerTerms.accept( aVisitor );
+  /**
+   * Returns the current value of finalTerm.
+   * 
+   * @return the finalTerm
+   */
+  public TriggerFinalTerm getFinalTerm()
+  {
+    return this.finalTerm;
+  }
+
+  /**
+   * Returns the current value of inputTerms.
+   * 
+   * @return the inputTerms
+   */
+  public TriggerInputTerm[] getInputTerms()
+  {
+    return this.inputTerms;
+  }
+
+  /**
+   * Returns the current value of midTerms.
+   * 
+   * @return the midTerms
+   */
+  public TriggerMidTerm[] getMidTerms()
+  {
+    return this.midTerms;
   }
 
   /**
@@ -98,12 +165,28 @@ public final class TriggerSum implements ITriggerVisitable
   }
 
   /**
+   * @return
+   */
+  int getOffset()
+  {
+    return ( 0x40 + ( this.stateNumber * 4 ) + this.stateTerm.getOffset() );
+  }
+
+  /**
    * Resets this trigger sum to its initial state.
    */
   void reset()
   {
     this.stateNumber = 0;
-    this.triggerTerms.reset();
+    for ( TriggerInputTerm inputTerm : this.inputTerms )
+    {
+      inputTerm.reset();
+    }
+    for ( TriggerMidTerm midTerm : this.midTerms )
+    {
+      midTerm.reset();
+    }
+    this.finalTerm.reset();
   }
 
   /**
@@ -120,21 +203,5 @@ public final class TriggerSum implements ITriggerVisitable
     }
 
     this.stateNumber = aStateNumber;
-  }
-
-  /**
-   * Sets triggerTerms to the given value.
-   * 
-   * @param aTriggerTerms
-   *          the triggerTerms to set.
-   */
-  void setTriggerTerms( final TriggerTerms aTriggerTerms )
-  {
-    if ( aTriggerTerms == null )
-    {
-      throw new IllegalArgumentException( "Invalid trigger terms" );
-    }
-
-    this.triggerTerms = aTriggerTerms;
   }
 }

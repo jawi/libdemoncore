@@ -29,21 +29,11 @@ import java.io.*;
  */
 public final class TriggerSequenceState implements ITriggerVisitable
 {
-  // CONSTANTS
-
-  private static final int TRIGSTATE_STATENUM_MASK = 0xF;
-  private static final int TRIGSTATE_OBTAIN_MASK = 0x000FFFFF;
-  private static final int TRIGSTATE_ELSE_BITOFS = 20;
-  private static final long TRIGSTATE_STOP_TIMER0 = 0x01000000L;
-  private static final long TRIGSTATE_STOP_TIMER1 = 0x02000000L;
-  private static final long TRIGSTATE_CLEAR_TIMER0 = 0x04000000L;
-  private static final long TRIGSTATE_CLEAR_TIMER1 = 0x08000000L;
-  private static final long TRIGSTATE_START_TIMER0 = 0x10000000L;
-  private static final long TRIGSTATE_START_TIMER1 = 0x20000000L;
-  private static final long TRIGSTATE_TRIGGER_FLAG = 0x40000000L;
-  private static final long TRIGSTATE_LASTSTATE = 0x80000000L;
-
   // VARIABLES
+
+  private final TriggerSum captureSum;
+  private final TriggerSum hitSum;
+  private final TriggerSum elseSum;
 
   private int stateNumber; // 0 to 15
   private boolean lastState;
@@ -55,10 +45,14 @@ public final class TriggerSequenceState implements ITriggerVisitable
   private int occurrenceCount;
 
   /**
-   * Creates a new {@link TriggerSequenceState} instance.
+   * Creates a new, empty, {@link TriggerSequenceState} instance.
    */
-  TriggerSequenceState()
+  public TriggerSequenceState()
   {
+    this.captureSum = new TriggerSum( TriggerStateTerm.CAPTURE );
+    this.hitSum = new TriggerSum( TriggerStateTerm.HIT );
+    this.elseSum = new TriggerSum( TriggerStateTerm.ELSE );
+
     this.stateNumber = 0;
     this.lastState = false;
     this.raiseTrigger = false;
@@ -76,8 +70,12 @@ public final class TriggerSequenceState implements ITriggerVisitable
    * @param aInitial
    *          the {@link TriggerSequenceState} to copy.
    */
-  TriggerSequenceState( final TriggerSequenceState aInitial )
+  public TriggerSequenceState( final TriggerSequenceState aInitial )
   {
+    this.captureSum = new TriggerSum( aInitial.captureSum );
+    this.hitSum = new TriggerSum( aInitial.hitSum );
+    this.elseSum = new TriggerSum( aInitial.elseSum );
+
     this.stateNumber = aInitial.stateNumber;
     this.lastState = aInitial.lastState;
     this.raiseTrigger = aInitial.raiseTrigger;
@@ -96,46 +94,21 @@ public final class TriggerSequenceState implements ITriggerVisitable
   @Override
   public void accept( final ITriggerVisitor aVisitor ) throws IOException
   {
-    // Select the correct LUT chain...
-    aVisitor.selectChain( this.stateNumber & TRIGSTATE_STATENUM_MASK );
+    aVisitor.visitTriggerSequence( this );
 
-    // Build the actual chain data...
-    int value = ( ( this.elseState & TRIGSTATE_STATENUM_MASK ) << TRIGSTATE_ELSE_BITOFS )
-        | ( this.occurrenceCount & TRIGSTATE_OBTAIN_MASK );
-    if ( this.lastState )
-    {
-      value |= TRIGSTATE_LASTSTATE;
-    }
-    if ( this.raiseTrigger )
-    {
-      value |= TRIGSTATE_TRIGGER_FLAG;
-    }
-    if ( ( this.startTimer & 1 ) != 0 )
-    {
-      value |= TRIGSTATE_START_TIMER0;
-    }
-    if ( ( this.startTimer & 2 ) != 0 )
-    {
-      value |= TRIGSTATE_START_TIMER1;
-    }
-    if ( ( this.stopTimer & 1 ) != 0 )
-    {
-      value |= TRIGSTATE_STOP_TIMER0;
-    }
-    if ( ( this.stopTimer & 2 ) != 0 )
-    {
-      value |= TRIGSTATE_STOP_TIMER1;
-    }
-    if ( ( this.clearTimer & 1 ) != 0 )
-    {
-      value |= TRIGSTATE_CLEAR_TIMER0;
-    }
-    if ( ( this.clearTimer & 2 ) != 0 )
-    {
-      value |= TRIGSTATE_CLEAR_TIMER1;
-    }
+    this.captureSum.accept( aVisitor );
+    this.hitSum.accept( aVisitor );
+    this.elseSum.accept( aVisitor );
+  }
 
-    aVisitor.writeChain( value );
+  /**
+   * Returns the capture terms.
+   * 
+   * @return the capture trigger terms, never <code>null</code>.
+   */
+  public TriggerSum getCaptureTerms()
+  {
+    return this.captureSum;
   }
 
   /**
@@ -156,6 +129,26 @@ public final class TriggerSequenceState implements ITriggerVisitable
   public int getElseState()
   {
     return this.elseState;
+  }
+
+  /**
+   * Returns the else terms.
+   * 
+   * @return the else trigger terms, never <code>null</code>.
+   */
+  public TriggerSum getElseTerms()
+  {
+    return this.elseSum;
+  }
+
+  /**
+   * Returns the hit (or "if") terms.
+   * 
+   * @return the hit trigger terms, never <code>null</code>.
+   */
+  public TriggerSum getHitTerms()
+  {
+    return this.hitSum;
   }
 
   /**
@@ -219,27 +212,12 @@ public final class TriggerSequenceState implements ITriggerVisitable
   }
 
   /**
-   * Resets the internal state of this sequence state to its initial state.
-   */
-  void reset()
-  {
-    this.stateNumber = 0;
-    this.lastState = false;
-    this.raiseTrigger = false;
-    this.startTimer = 0;
-    this.stopTimer = 0;
-    this.clearTimer = 0;
-    this.elseState = 0;
-    this.occurrenceCount = 0;
-  }
-
-  /**
    * Sets clearTimer to the given value.
    * 
    * @param aClearTimer
    *          the clearTimer to set.
    */
-  void setClearTimer( final int aClearTimer )
+  public void setClearTimer( final int aClearTimer )
   {
     this.clearTimer = aClearTimer;
   }
@@ -250,7 +228,7 @@ public final class TriggerSequenceState implements ITriggerVisitable
    * @param aElseState
    *          the elseState to set.
    */
-  void setElseState( final int aElseState )
+  public void setElseState( final int aElseState )
   {
     if ( ( aElseState < 0 ) || ( aElseState > 15 ) )
     {
@@ -266,7 +244,7 @@ public final class TriggerSequenceState implements ITriggerVisitable
    * @param aLastState
    *          the lastState to set.
    */
-  void setLastState( final boolean aLastState )
+  public void setLastState( final boolean aLastState )
   {
     this.lastState = aLastState;
   }
@@ -277,7 +255,7 @@ public final class TriggerSequenceState implements ITriggerVisitable
    * @param aOccurrenceCount
    *          the occurrenceCount to set.
    */
-  void setOccurrenceCount( final int aOccurrenceCount )
+  public void setOccurrenceCount( final int aOccurrenceCount )
   {
     this.occurrenceCount = aOccurrenceCount;
   }
@@ -289,7 +267,7 @@ public final class TriggerSequenceState implements ITriggerVisitable
    *          <code>true</code> to raise the trigger in this state,
    *          <code>false</code> to continue in the FSM.
    */
-  void setRaiseTrigger( final boolean aRaiseTrigger )
+  public void setRaiseTrigger( final boolean aRaiseTrigger )
   {
     this.raiseTrigger = aRaiseTrigger;
   }
@@ -300,7 +278,7 @@ public final class TriggerSequenceState implements ITriggerVisitable
    * @param aStartTimer
    *          the startTimer to set.
    */
-  void setStartTimer( final int aStartTimer )
+  public void setStartTimer( final int aStartTimer )
   {
     this.startTimer = aStartTimer;
   }
@@ -311,7 +289,7 @@ public final class TriggerSequenceState implements ITriggerVisitable
    * @param aStateNumber
    *          the stateNumber to set.
    */
-  void setStateNumber( final int aStateNumber )
+  public void setStateNumber( final int aStateNumber )
   {
     if ( ( aStateNumber < 0 ) || ( aStateNumber > 15 ) )
     {
@@ -319,6 +297,9 @@ public final class TriggerSequenceState implements ITriggerVisitable
     }
 
     this.stateNumber = aStateNumber;
+    this.captureSum.setStateNumber( aStateNumber );
+    this.hitSum.setStateNumber( aStateNumber );
+    this.elseSum.setStateNumber( aStateNumber );
   }
 
   /**
@@ -327,8 +308,27 @@ public final class TriggerSequenceState implements ITriggerVisitable
    * @param aStopTimer
    *          the stopTimer to set.
    */
-  void setStopTimer( final int aStopTimer )
+  public void setStopTimer( final int aStopTimer )
   {
     this.stopTimer = aStopTimer;
+  }
+
+  /**
+   * Resets the internal state of this sequence state to its initial state.
+   */
+  void reset()
+  {
+    this.stateNumber = 0;
+    this.lastState = false;
+    this.raiseTrigger = false;
+    this.startTimer = 0;
+    this.stopTimer = 0;
+    this.clearTimer = 0;
+    this.elseState = 0;
+    this.occurrenceCount = 0;
+
+    this.captureSum.reset();
+    this.hitSum.reset();
+    this.elseSum.reset();
   }
 }

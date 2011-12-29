@@ -40,4 +40,5 @@ public interface ITriggerVisitable
    *           in case of I/O problems.
    */
   void accept( ITriggerVisitor aVisitor ) throws IOException;
+
 }
