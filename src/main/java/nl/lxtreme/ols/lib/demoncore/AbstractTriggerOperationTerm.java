@@ -21,86 +21,43 @@
 package nl.lxtreme.ols.lib.demoncore;
 
 
-import java.io.*;
-
-
 /**
- * Denotes an input term for a trigger sum.
+ * 
  */
-public class TriggerInputTerm implements ITriggerVisitable
+public abstract class AbstractTriggerOperationTerm implements ITriggerVisitable
 {
   // VARIABLES
 
-  private final AbstractTriggerTerm termA;
-  private final AbstractTriggerTerm termB;
   private TriggerOperation operation;
 
   // CONSTRUCTORS
 
   /**
-   * Creates a new TriggerInputTerm instance.
+   * Creates a new AbstractTriggerOperationTerm instance.
    */
-  public TriggerInputTerm( final AbstractTriggerTerm aTermA, final AbstractTriggerTerm aTermB )
+  protected AbstractTriggerOperationTerm()
   {
-    if ( ( aTermA == null ) || ( aTermB == null ) )
-    {
-      throw new IllegalArgumentException( "None of the trigger terms can be null!" );
-    }
-    this.termA = aTermA;
-    this.termB = aTermB;
-    reset();
+    // No-op
   }
 
   /**
-   * Creates a new TriggerInputTerm instance as an exact copy of the given
-   * trigger input term.
+   * Creates a new AbstractTriggerOperationTerm instance.
    */
-  public TriggerInputTerm( final TriggerInputTerm aInput )
+  protected AbstractTriggerOperationTerm( final AbstractTriggerOperationTerm aOperationTerm )
   {
-    this.termA = aInput.termA;
-    this.termB = aInput.termB;
-    this.operation = aInput.operation;
+    this.operation = aOperationTerm.operation;
   }
 
   // METHODS
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void accept( final ITriggerVisitor aVisitor ) throws IOException
-  {
-    aVisitor.visitInputTerm( this );
-  }
 
   /**
    * Returns the current value of operation.
    * 
    * @return the operation
    */
-  public TriggerOperation getOperation()
+  public final TriggerOperation getOperation()
   {
     return this.operation;
-  }
-
-  /**
-   * Returns the current value of termA.
-   * 
-   * @return the termA
-   */
-  public AbstractTriggerTerm getTermA()
-  {
-    return this.termA;
-  }
-
-  /**
-   * Returns the current value of termB.
-   * 
-   * @return the termB
-   */
-  public AbstractTriggerTerm getTermB()
-  {
-    return this.termB;
   }
 
   /**
@@ -109,7 +66,7 @@ public class TriggerInputTerm implements ITriggerVisitable
    * @param aOperation
    *          the operation to set.
    */
-  public void setOperation( final TriggerOperation aOperation )
+  public final void setOperation( final TriggerOperation aOperation )
   {
     if ( aOperation == null )
     {
@@ -121,7 +78,7 @@ public class TriggerInputTerm implements ITriggerVisitable
   /**
    * @return the offset of the current operation.
    */
-  final int getOffset()
+  protected final int getOffset()
   {
     return this.operation.getOffset();
   }
@@ -129,10 +86,8 @@ public class TriggerInputTerm implements ITriggerVisitable
   /**
    * Resets this trigger input term to its initial state.
    */
-  final void reset()
+  protected void reset()
   {
-    this.termA.reset();
-    this.termB.reset();
     this.operation = TriggerOperation.OR;
   }
 }

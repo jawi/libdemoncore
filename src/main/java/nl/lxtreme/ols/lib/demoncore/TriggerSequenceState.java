@@ -31,9 +31,7 @@ public final class TriggerSequenceState implements ITriggerVisitable
 {
   // VARIABLES
 
-  private final TriggerSum captureSum;
-  private final TriggerSum hitSum;
-  private final TriggerSum elseSum;
+  private final TriggerSum[] sums;
 
   private int stateNumber; // 0 to 15
   private boolean lastState;
@@ -49,9 +47,11 @@ public final class TriggerSequenceState implements ITriggerVisitable
    */
   public TriggerSequenceState()
   {
-    this.captureSum = new TriggerSum( TriggerStateTerm.CAPTURE );
-    this.hitSum = new TriggerSum( TriggerStateTerm.HIT );
-    this.elseSum = new TriggerSum( TriggerStateTerm.ELSE );
+    this.sums = new TriggerSum[3];
+    for ( TriggerStateTerm stateTerm : TriggerStateTerm.values() )
+    {
+      this.sums[stateTerm.ordinal()] = new TriggerSum( stateTerm );
+    }
 
     this.stateNumber = 0;
     this.lastState = false;
@@ -72,9 +72,7 @@ public final class TriggerSequenceState implements ITriggerVisitable
    */
   public TriggerSequenceState( final TriggerSequenceState aInitial )
   {
-    this.captureSum = new TriggerSum( aInitial.captureSum );
-    this.hitSum = new TriggerSum( aInitial.hitSum );
-    this.elseSum = new TriggerSum( aInitial.elseSum );
+    this.sums = Utils.deepCopy( aInitial.sums );
 
     this.stateNumber = aInitial.stateNumber;
     this.lastState = aInitial.lastState;
@@ -94,21 +92,12 @@ public final class TriggerSequenceState implements ITriggerVisitable
   @Override
   public void accept( final ITriggerVisitor aVisitor ) throws IOException
   {
-    aVisitor.visitTriggerSequence( this );
+    aVisitor.visit( this );
 
-    this.captureSum.accept( aVisitor );
-    this.hitSum.accept( aVisitor );
-    this.elseSum.accept( aVisitor );
-  }
-
-  /**
-   * Returns the capture terms.
-   * 
-   * @return the capture trigger terms, never <code>null</code>.
-   */
-  public TriggerSum getCaptureTerms()
-  {
-    return this.captureSum;
+    for ( TriggerSum sum : this.sums )
+    {
+      sum.accept( aVisitor );
+    }
   }
 
   /**
@@ -129,26 +118,6 @@ public final class TriggerSequenceState implements ITriggerVisitable
   public int getElseState()
   {
     return this.elseState;
-  }
-
-  /**
-   * Returns the else terms.
-   * 
-   * @return the else trigger terms, never <code>null</code>.
-   */
-  public TriggerSum getElseTerms()
-  {
-    return this.elseSum;
-  }
-
-  /**
-   * Returns the hit (or "if") terms.
-   * 
-   * @return the hit trigger terms, never <code>null</code>.
-   */
-  public TriggerSum getHitTerms()
-  {
-    return this.hitSum;
   }
 
   /**
@@ -189,6 +158,15 @@ public final class TriggerSequenceState implements ITriggerVisitable
   public int getStopTimer()
   {
     return this.stopTimer;
+  }
+
+  /**
+   * @param aTermType
+   * @return
+   */
+  public TriggerSum getTriggerSum( final TriggerStateTerm aTermType )
+  {
+    return this.sums[aTermType.ordinal()];
   }
 
   /**
@@ -297,9 +275,10 @@ public final class TriggerSequenceState implements ITriggerVisitable
     }
 
     this.stateNumber = aStateNumber;
-    this.captureSum.setStateNumber( aStateNumber );
-    this.hitSum.setStateNumber( aStateNumber );
-    this.elseSum.setStateNumber( aStateNumber );
+    for ( TriggerSum sum : this.sums )
+    {
+      sum.setStateNumber( aStateNumber );
+    }
   }
 
   /**
@@ -311,6 +290,20 @@ public final class TriggerSequenceState implements ITriggerVisitable
   public void setStopTimer( final int aStopTimer )
   {
     this.stopTimer = aStopTimer;
+  }
+
+  /**
+   * @param aTermType
+   * @return
+   */
+  public void setTriggerSum( final TriggerStateTerm aTermType, final TriggerSum aSum )
+  {
+    if ( aSum == null )
+    {
+      throw new IllegalArgumentException( "Sum cannot be null!" );
+    }
+
+    this.sums[aTermType.ordinal()] = aSum;
   }
 
   /**
@@ -327,8 +320,9 @@ public final class TriggerSequenceState implements ITriggerVisitable
     this.elseState = 0;
     this.occurrenceCount = 0;
 
-    this.captureSum.reset();
-    this.hitSum.reset();
-    this.elseSum.reset();
+    for ( TriggerSum sum : this.sums )
+    {
+      sum.reset();
+    }
   }
 }

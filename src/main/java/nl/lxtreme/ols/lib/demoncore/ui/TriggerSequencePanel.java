@@ -23,9 +23,7 @@ package nl.lxtreme.ols.lib.demoncore.ui;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.io.*;
 import java.util.*;
-import java.util.List;
 
 import javax.swing.*;
 
@@ -38,265 +36,50 @@ import nl.lxtreme.ols.lib.demoncore.*;
  */
 public class TriggerSequencePanel extends JPanel
 {
-  // CONSTANTS
+  // INNER TYPES
 
   /**
-   * Converts a {@link TriggerSum} to a single, human readable, string
-   * representation.
+   * 
    */
-  static final class TriggerSumStringifier implements ITriggerVisitor
+  final class TriggerSumEditAction extends AbstractAction
   {
     // CONSTANTS
 
-    private static final boolean USE_NEGATION_LINE = true;
-
-    private static final String NEGATE = "\u0305";
-    private static final String NOT = "\u00AC";
+    private static final long serialVersionUID = 1L;
 
     // VARIABLES
 
-    private final Stack<String> symStack = new Stack<String>();
+    private final TriggerStateTerm stateTermType;
+    private final TriggerSequenceState triggerSequence;
+
+    // CONSTRUCTORS
+
+    /**
+     * Creates a new TriggerSequencePanel.TriggerSumEditAction instance.
+     */
+    public TriggerSumEditAction( final TriggerStateTerm aStateTermType, final TriggerSequenceState aTriggerSequenceState )
+    {
+      this.stateTermType = aStateTermType;
+      this.triggerSequence = aTriggerSequenceState;
+    }
 
     // METHODS
 
     /**
-     * Converts a given {@link TriggerSum} to a human readable string
-     * representation.
-     * 
-     * @param aTriggerSum
-     *          the trigger sum to convert to a string representation, cannot be
-     *          <code>null</code>.
-     * @return a human readable string representation of the given trigger sum,
-     *         or an empty string if the given trigger sum did not provide any
-     *         terms.
-     */
-    public String toString( final TriggerSum aTriggerSum )
-    {
-      this.symStack.clear();
-
-      try
-      {
-        aTriggerSum.accept( this );
-      }
-      catch ( IOException exception )
-      {
-        exception.printStackTrace();
-      }
-
-      final StringBuilder sb = new StringBuilder();
-      while ( !this.symStack.isEmpty() )
-      {
-        sb.insert( 0, this.symStack.pop() );
-      }
-
-      return sb.toString();
-    }
-
-    /**
      * {@inheritDoc}
      */
     @Override
-    public void visitFinalTerm( final TriggerFinalTerm aTerm ) throws IOException
+    public void actionPerformed( final ActionEvent aE )
     {
-      int depth = this.symStack.size();
+      final TriggerSum sum = this.triggerSequence.getTriggerSum( this.stateTermType );
 
-      aTerm.getTermB().accept( this );
-      aTerm.getTermA().accept( this );
-
-      // Walk across the stack and simplify its entries...
-      walkSymbolStack( aTerm.getOperation(), depth );
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void visitInputTerm( final TriggerInputTerm aTerm ) throws IOException
-    {
-      int depth = this.symStack.size();
-
-      // Visit the terms individually first...
-      aTerm.getTermB().accept( this );
-      aTerm.getTermA().accept( this );
-
-      // Walk across the stack and simplify its entries...
-      walkSymbolStack( aTerm.getOperation(), depth );
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void visitMidTerm( final TriggerMidTerm aTerm ) throws IOException
-    {
-      int depth = this.symStack.size();
-
-      // Visit the terms individually first...
-      aTerm.getTermD().accept( this );
-      aTerm.getTermC().accept( this );
-      aTerm.getTermB().accept( this );
-      aTerm.getTermA().accept( this );
-
-      // Walk across the stack and simplify its entries...
-      walkSymbolStack( aTerm.getOperation(), depth );
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void visitTerm( final AbstractTriggerTerm aTerm ) throws IOException
-    {
-      if ( !aTerm.isDisabled() )
+      final TriggerSumEditor editor = new TriggerSumEditor( TriggerSequencePanel.this.mode, sum );
+      if ( editor.showDialog() )
       {
-        this.symStack.push( asString( aTerm ) );
-      }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void visitTriggerSequence( final TriggerSequenceState aTriggerSequenceState ) throws IOException
-    {
-      // NO-op
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void visitTriggerSum( final TriggerSum aSum ) throws IOException
-    {
-      // NO-op
-    }
-
-    /**
-     * Converts the given term to a string representation.
-     * 
-     * @param aTerm
-     *          the trigger term to convert to string, cannot be
-     *          <code>null</code>.
-     * @return a string representation of the given term, never
-     *         <code>null</code>.
-     */
-    private String asString( final AbstractTriggerTerm aTerm )
-    {
-      StringBuilder sb = new StringBuilder( RB.getString( aTerm.getType().getResourceKey() ) );
-      if ( aTerm.isInverted() )
-      {
-        if ( !USE_NEGATION_LINE || ( sb.length() > 1 ) )
-        {
-          sb.insert( 0, NOT );
-        }
-        else
-        {
-          sb.append( NEGATE );
-        }
-      }
-      return sb.toString();
-    }
-
-    /**
-     * Combines a given list of terms with the given trigger operation into a
-     * single string representation.
-     * 
-     * @param aTermList
-     *          the list of terms, can be empty, but never <code>null</code>;
-     * @param aOperation
-     *          the trigger operation to apply to each term, cannot be
-     *          <code>null</code>.
-     * @return a string representation, can be <code>null</code> if the given
-     *         term list is empty.
-     */
-    private String asString( final List<String> aTermList, final TriggerOperation aOperation )
-    {
-      if ( aTermList.isEmpty() )
-      {
-        return null;
+        this.triggerSequence.setTriggerSum( this.stateTermType, editor.getTriggerSum() );
       }
 
-      final String opName = asString( aOperation );
-
-      StringBuilder sb = new StringBuilder();
-      for ( String term : aTermList )
-      {
-        if ( sb.length() > 0 )
-        {
-          sb.append( ' ' ).append( opName ).append( ' ' );
-        }
-        sb.append( term );
-      }
-
-      String result = sb.toString().trim();
-      if ( ( aTermList.size() > 1 ) || aOperation.isInverted() )
-      {
-        result = "(".concat( result.concat( ")" ) );
-      }
-      if ( aOperation.isInverted() )
-      {
-        result = NOT.concat( result );
-      }
-
-      return result;
-    }
-
-    /**
-     * Converts the given trigger operation to a string representation.
-     * 
-     * @param aOperation
-     *          the operation to convert, cannot be <code>null</code>.
-     * @return the string representation of the given operation, never
-     *         <code>null</code>.
-     */
-    private String asString( final TriggerOperation aOperation )
-    {
-      switch ( aOperation )
-      {
-        case A_ONLY:
-        case B_ONLY:
-          return "";
-
-        case ANY:
-          return "any state";
-
-        case NOP:
-          return "no state";
-
-        case NAND:
-        case AND:
-          return "\u22C5"; // middle dot
-
-        case NOR:
-        case OR:
-          return "+"; // plus symbol
-
-        case NXOR:
-        case XOR:
-          return "\u2295"; // circled plus
-
-        default:
-          throw new IllegalArgumentException();
-      }
-    }
-
-    /**
-     * @param symStack
-     * @param aTerm
-     */
-    private void walkSymbolStack( final TriggerOperation aOperation, final int aDepth )
-    {
-      List<String> terms = new ArrayList<String>();
-      while ( !this.symStack.isEmpty() && ( this.symStack.size() > aDepth ) )
-      {
-        terms.add( this.symStack.pop() );
-      }
-
-      String value = asString( terms, aOperation );
-      if ( ( value != null ) && ( value.length() > 0 ) )
-      {
-        this.symStack.push( value );
-      }
+      putValue( NAME, asString( this.triggerSequence.getTriggerSum( this.stateTermType ) ) );
     }
   }
 
@@ -356,6 +139,15 @@ public class TriggerSequencePanel extends JPanel
   public TriggerSequenceState getTriggerSequence()
   {
     return this.model;
+  }
+
+  /**
+   * @param aTriggerSum
+   * @return
+   */
+  final String asString( final TriggerSum aTriggerSum )
+  {
+    return this.triggerSumStringifier.toString( aTriggerSum );
   }
 
   /**
@@ -520,15 +312,6 @@ public class TriggerSequencePanel extends JPanel
   }
 
   /**
-   * @param aTriggerSum
-   * @return
-   */
-  private String getTriggerSumString( final TriggerSum aTriggerSum )
-  {
-    return this.triggerSumStringifier.toString( aTriggerSum );
-  }
-
-  /**
    * Initializes all (sub)components used in this component.
    */
   private void initPanel()
@@ -537,9 +320,9 @@ public class TriggerSequencePanel extends JPanel
     final Integer stateNr = Integer.valueOf( this.model.getStateNumber() );
     this.title = new JLabel( String.format( RB.getString( "rSequenceLevel" ), modeStr, stateNr ) );
 
-    this.captureTerm = new JButton( getTriggerSumString( this.model.getCaptureTerms() ) );
-    this.hitTerm = new JButton( getTriggerSumString( this.model.getHitTerms() ) );
-    this.elseTerm = new JButton( getTriggerSumString( this.model.getElseTerms() ) );
+    this.captureTerm = new JButton( new TriggerSumEditAction( TriggerStateTerm.CAPTURE, this.model ) );
+    this.hitTerm = new JButton( new TriggerSumEditAction( TriggerStateTerm.HIT, this.model ) );
+    this.elseTerm = new JButton( new TriggerSumEditAction( TriggerStateTerm.ELSE, this.model ) );
 
     this.setTrigger = new JCheckBox( RB.getString( "rSetTrigger" ) );
     this.timerControl = new JButton( RB.getString( "rTimerControl" ) );

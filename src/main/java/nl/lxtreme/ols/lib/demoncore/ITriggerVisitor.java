@@ -34,30 +34,30 @@ public interface ITriggerVisitor
   /**
    * @param aTerm
    */
-  void visitFinalTerm( TriggerFinalTerm aTerm ) throws IOException;
+  void visit( AbstractTriggerTerm aTerm ) throws IOException;
 
   /**
    * @param aTerm
    */
-  void visitInputTerm( TriggerInputTerm aTerm ) throws IOException;
+  void visit( TriggerFinalTerm aTerm ) throws IOException;
 
   /**
    * @param aTerm
    */
-  void visitMidTerm( TriggerMidTerm aTerm ) throws IOException;
+  void visit( TriggerMidTerm aTerm ) throws IOException;
 
   /**
    * @param aTerm
    */
-  void visitTerm( AbstractTriggerTerm aTerm ) throws IOException;
+  void visit( TriggerPairTerm aTerm ) throws IOException;
 
   /**
    * @param aTriggerSequenceState
    */
-  void visitTriggerSequence( TriggerSequenceState aTriggerSequenceState ) throws IOException;
+  void visit( TriggerSequenceState aTriggerSequenceState ) throws IOException;
 
   /**
    * @param aSum
    */
-  void visitTriggerSum( TriggerSum aSum ) throws IOException;
+  void visit( TriggerSum aSum ) throws IOException;
 }

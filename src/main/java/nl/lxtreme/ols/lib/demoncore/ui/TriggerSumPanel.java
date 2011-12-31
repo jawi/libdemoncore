@@ -23,10 +23,11 @@ package nl.lxtreme.ols.lib.demoncore.ui;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.beans.*;
 import java.util.*;
 
 import javax.swing.*;
+
+import nl.lxtreme.ols.lib.demoncore.*;
 
 
 /**
@@ -38,129 +39,49 @@ public class TriggerSumPanel extends JPanel
 {
   // INNER TYPES
 
-  static class ButtonUIElement extends UIElement<StatePanel>
-  {
-    /**
-     * Creates a new ButtonUIElement instance.
-     */
-    public ButtonUIElement( final StatePanel aComponent, final UIElement<?>... aBackLinks )
-    {
-      super( aComponent, aBackLinks );
-    }
-  }
-
-  /**
-   * Denotes a single UI element which (optionally) connects back to other UI
-   * elements.
-   */
-  static class ComboBoxUIElement extends UIElement<JComboBox>
-  {
-    /**
-     * Creates a new TriggerSumPanel.ComboBoxUIElement instance.
-     */
-    public ComboBoxUIElement( final JComboBox aComponent, final UIElement<?>... aBackLinks )
-    {
-      super( aComponent, aBackLinks );
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void propertyChange( final PropertyChangeEvent aEvent )
-    {
-      if ( isInputStagePropertyChangeEvent( aEvent ) )
-      {
-        boolean aEnabled = isButtonEnabled( 0 );
-        boolean bEnabled = isButtonEnabled( 1 );
-
-        String selectedKey;
-        if ( aEnabled )
-        {
-          if ( bEnabled )
-          {
-            selectedKey = DemonCore.rOR;
-          }
-          else
-          {
-            selectedKey = DemonCore.rA_ONLY;
-          }
-        }
-        else
-        {
-          if ( bEnabled )
-          {
-            selectedKey = DemonCore.rB_ONLY;
-          }
-          else
-          {
-            selectedKey = DemonCore.rNOP;
-          }
-        }
-
-        this.component.setSelectedItem( RB.getString( selectedKey ) );
-      }
-    }
-
-    /**
-     * @param aIndex
-     * @return
-     */
-    private boolean isButtonEnabled( final int aIndex )
-    {
-      JComponent comp = this.backLinks[aIndex].component;
-      assert comp instanceof StatePanel : "Not a state panel?!";
-      return ( ( StatePanel )comp ).isStateEnabled();
-    }
-
-    /**
-     * @param aEvent
-     * @return
-     */
-    private boolean isInputStagePropertyChangeEvent( final PropertyChangeEvent aEvent )
-    {
-      boolean isRightProperty = aEvent.getPropertyName().startsWith( StatePanel.STATE_PROPERTY_NAME );
-      boolean isInputPairStage = Boolean.TRUE.equals( this.component.getClientProperty( PROPERTY_IS_INPUT_STAGE ) );
-      return isRightProperty && isInputPairStage;
-    }
-  }
-
   /**
    * Provides a component panel that can be enabled or disabled.
    */
-  static class StatePanel extends JPanel
+  static class InputTermPanel extends JPanel implements ItemListener
   {
+    // CONSTANTS
+
+    private static final String PROPERTY_OLD_STATE = "oldState";
+    private static final String PREFIX = "\u00AC";
+
     private static final long serialVersionUID = 1L;
 
-    static final String STATE_PROPERTY_NAME = "stateChange";
+    // VARIABLES
 
+    private final AbstractTriggerTerm term;
     private final JCheckBox state;
-    private final JComponent innerComponent;
+    private final JToggleButton inversionButton;
+
+    // CONSTRUCTORS
 
     /**
-     * Creates a new TriggerSumPanel.StatePanel instance.
+     * Creates a new InputTermPanel instance.
      */
-    public StatePanel( final JComponent aInnerComponent )
+    public InputTermPanel( final AbstractTriggerTerm aTerm )
     {
       super( new GridBagLayout() );
 
-      this.innerComponent = aInnerComponent;
-
+      this.term = aTerm;
       this.state = new JCheckBox();
-      this.state.addActionListener( new ActionListener()
-      {
-        @Override
-        public void actionPerformed( final ActionEvent aEvent )
-        {
-          final JCheckBox cb = ( JCheckBox )aEvent.getSource();
-          StatePanel.this.innerComponent.setEnabled( cb.isSelected() );
+      this.inversionButton = new JToggleButton();
 
-          StatePanel.this.firePropertyChange( STATE_PROPERTY_NAME, !cb.isSelected(), cb.isSelected() );
-        }
-      } );
       // Initial state...
-      this.innerComponent.setEnabled( false );
-      this.state.setSelected( false );
+      boolean isEnabled = !aTerm.isDisabled();
+
+      this.inversionButton.setSelected( aTerm.isInverted() );
+      this.inversionButton.setEnabled( isEnabled );
+      this.state.setSelected( isEnabled );
+
+      this.inversionButton.setText( getInversionButtonText() );
+
+      // Listeners...
+      this.inversionButton.addItemListener( this );
+      this.state.addItemListener( this );
 
       GridBagConstraints gbc = new GridBagConstraints( 0, 0, 1, 1, 0.0, 1.0, GridBagConstraints.BASELINE,
           GridBagConstraints.NONE, new Insets( 0, 0, 0, 0 ), 0, 0 );
@@ -171,15 +92,104 @@ public class TriggerSumPanel extends JPanel
       gbc.weightx = 1.0;
       gbc.fill = GridBagConstraints.HORIZONTAL;
 
-      add( this.innerComponent, gbc );
+      add( this.inversionButton, gbc );
+    }
+
+    // METHODS
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void itemStateChanged( final ItemEvent aEvent )
+    {
+      final Object source = aEvent.getSource();
+      if ( source == this.inversionButton )
+      {
+        // Toggle between inversion and not...
+        this.term.setState( this.inversionButton.isSelected() ? TriggerInputState.ENABLED_INVERTED
+            : TriggerInputState.ENABLED );
+      }
+      else if ( source == this.state )
+      {
+        this.inversionButton.setEnabled( this.state.isSelected() );
+        if ( this.state.isSelected() )
+        {
+          // Restore previous state...
+          TriggerInputState termState = ( TriggerInputState )getClientProperty( PROPERTY_OLD_STATE );
+          if ( termState == null )
+          {
+            termState = TriggerInputState.ENABLED;
+          }
+
+          this.term.setState( termState );
+        }
+        else
+        {
+          // Keep track of the previous state...
+          putClientProperty( PROPERTY_OLD_STATE, this.term.getState() );
+
+          this.term.setDisabled();
+        }
+      }
+
+      this.inversionButton.setText( getInversionButtonText() );
     }
 
     /**
      * @return
      */
-    public boolean isStateEnabled()
+    private String getInversionButtonText()
     {
-      return this.state.isSelected();
+      final String text = TriggerSumStringifier.asString( this.term );
+      if ( this.term.isInverted() )
+      {
+        return PREFIX.concat( text );
+      }
+      return text;
+    }
+  }
+
+  /**
+   * A small panel with the trigger operation combobox.
+   */
+  static class OperationPanel extends JPanel implements ItemListener
+  {
+    // CONSTANTS
+
+    private static final long serialVersionUID = 1L;
+
+    // VARIABLES
+
+    private final AbstractTriggerOperationTerm operationTerm;
+    private final JComboBox comboBox;
+
+    // CONSTRUCTORS
+
+    /**
+     * Creates a new TriggerSumPanel.OperationPanel instance.
+     */
+    public OperationPanel( final AbstractTriggerOperationTerm aOperationTerm )
+    {
+      this.operationTerm = aOperationTerm;
+
+      this.comboBox = new JComboBox( EnumSet.range( TriggerOperation.AND, TriggerOperation.NXOR ).toArray() );
+      this.comboBox.setSelectedItem( aOperationTerm.getOperation() );
+      this.comboBox.addItemListener( this );
+
+      add( this.comboBox, BorderLayout.CENTER );
+    }
+
+    // METHODS
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void itemStateChanged( final ItemEvent aEvent )
+    {
+      final JComboBox cb = ( JComboBox )aEvent.getSource();
+      this.operationTerm.setOperation( ( TriggerOperation )cb.getSelectedItem() );
     }
   }
 
@@ -187,22 +197,18 @@ public class TriggerSumPanel extends JPanel
    * Denotes a single UI element which (optionally) connects back to other UI
    * elements.
    */
-  static abstract class UIElement<TYPE extends JComponent> implements PropertyChangeListener
+  static final class UIElement
   {
-    protected final TYPE component;
-    protected final UIElement<?>[] backLinks;
+    final JComponent component;
+    final UIElement[] backLinks;
 
     /**
      * Creates a new TriggerSumPanel.UIElement instance.
      */
-    public UIElement( final TYPE aComponent, final UIElement<?>... aBackLinks )
+    public UIElement( final JComponent aComponent, final UIElement... aBackLinks )
     {
       this.component = aComponent;
       this.backLinks = Arrays.copyOf( aBackLinks, aBackLinks.length );
-      for ( UIElement<?> backLink : this.backLinks )
-      {
-        backLink.component.addPropertyChangeListener( this );
-      }
     }
 
     /**
@@ -213,36 +219,20 @@ public class TriggerSumPanel extends JPanel
     {
       return ( this.backLinks != null ) && ( this.backLinks.length > 0 );
     }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void propertyChange( final PropertyChangeEvent aEvent )
-    {
-      // NO-op
-    }
   }
 
   // CONSTANTS
 
   private static final long serialVersionUID = 1L;
 
-  private static final ResourceBundle RB = ResourceBundle.getBundle( "nl.lxtreme.ols.lib.demoncore.ui.DemonCore" );
-
-  private static final String PROPERTY_IS_INPUT_STAGE = "IsInputStage";
-
-  private static final String[] LOGICAL_OPERATIONS_INPUT = RB.getStringArray( "rInputLogicalOperations" );
-  private static final String[] LOGICAL_OPERATIONS_OTHER = RB.getStringArray( "rOtherLogicalOperations" );
-  private static final String[] INPUT_STAGE_NAMES = RB.getStringArray( "rInputStageNames" );
-
   // VARIABLES
 
-  private final TriggerMode mode;
-  private UIElement<?>[] inputStages;
-  private UIElement<?>[] pairValueStages;
-  private UIElement<?>[] quadValueStages;
-  private UIElement<?> endStage;
+  private final TriggerSum model;
+
+  private UIElement[] inputTerms;
+  private UIElement[] pairTerms;
+  private UIElement[] midTerms;
+  private UIElement finalTerm;
 
   // CONSTRUCTORS
 
@@ -251,19 +241,35 @@ public class TriggerSumPanel extends JPanel
    * 
    * @param aMode
    *          the trigger mode, whether we're displaying states or timing
-   *          values.
+   *          values, cannot be <code>null</code>;
+   * @param aTriggerSum
+   *          the trigger sum to edit in this panel. Will be changed by this
+   *          panel, cannot be <code>null</code>.
    */
-  public TriggerSumPanel( final TriggerMode aMode )
+  public TriggerSumPanel( final TriggerMode aMode, final TriggerSum aTriggerSum )
   {
     super( new GridBagLayout() );
 
-    this.mode = aMode;
+    this.model = aTriggerSum;
 
     initPanel();
     buildPanel();
   }
 
   // METHODS
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public Dimension getPreferredSize()
+  {
+    final Dimension preferredSize = super.getPreferredSize();
+    // Enlarge the width of this component by some pixels to ensure there's
+    // space left for the tree-lines in between the various components...
+    preferredSize.width += 160;
+    return preferredSize;
+  }
 
   /**
    * {@inheritDoc}
@@ -278,7 +284,7 @@ public class TriggerSumPanel extends JPanel
     {
       // Draw all the intermediary lines between the various stages (tail
       // recursive)...
-      drawTreeConnections( canvas, this.endStage );
+      drawTreeConnections( canvas, this.finalTerm );
     }
     finally
     {
@@ -297,7 +303,7 @@ public class TriggerSumPanel extends JPanel
     // First column...
     gbc.gridx = 0;
 
-    for ( UIElement<?> inputStage : this.inputStages )
+    for ( UIElement inputStage : this.inputTerms )
     {
       gbc.gridy++;
       add( inputStage.component, gbc );
@@ -308,7 +314,7 @@ public class TriggerSumPanel extends JPanel
     gbc.gridy = 1;
     gbc.gridheight = 2;
 
-    for ( UIElement<?> pairValueStage : this.pairValueStages )
+    for ( UIElement pairValueStage : this.pairTerms )
     {
       add( pairValueStage.component, gbc );
       gbc.gridy += 2;
@@ -318,7 +324,7 @@ public class TriggerSumPanel extends JPanel
     gbc.gridx = 2;
     gbc.gridy = 4;
 
-    for ( UIElement<?> quadValueStage : this.quadValueStages )
+    for ( UIElement quadValueStage : this.midTerms )
     {
       add( quadValueStage.component, gbc );
       gbc.gridy += 8;
@@ -328,30 +334,26 @@ public class TriggerSumPanel extends JPanel
     gbc.gridx = 3;
     gbc.gridy = 8;
 
-    add( this.endStage.component, gbc );
+    add( this.finalTerm.component, gbc );
   }
 
   /**
-   * @param aIndex
-   * @return
-   */
-  private JComboBox createLogicalOperator( final boolean aInputStage )
-  {
-    JComboBox result = new JComboBox( aInputStage ? LOGICAL_OPERATIONS_INPUT : LOGICAL_OPERATIONS_OTHER );
-    result.putClientProperty( PROPERTY_IS_INPUT_STAGE, Boolean.valueOf( aInputStage ) );
-    result.setSelectedIndex( 2 );
-    return result;
-  }
-
-  /**
+   * Draws orthogonal lines between the given component and its "back linked"
+   * components.
+   * <p>
+   * This method will (tail) recursively call itself to walk back through each
+   * back linked component.
+   * </p>
+   * 
    * @param aCanvas
-   * @param aToComponent
-   * @param aFromComponents
+   *          the canvas to paint on, cannot be <code>null</code>;
+   * @param aUIElement
+   *          the component to draw the lines from, cannot be <code>null</code>.
    */
-  private void drawTreeConnections( final Graphics2D aCanvas, final UIElement<?> aToComponent )
+  private void drawTreeConnections( final Graphics2D aCanvas, final UIElement aUIElement )
   {
-    final UIElement<?>[] fromComponents = aToComponent.backLinks;
-    final int iV = fromComponents.length;
+    final UIElement[] backlinks = aUIElement.backLinks;
+    final int iV = backlinks.length;
     if ( iV < 2 )
     {
       return;
@@ -362,23 +364,23 @@ public class TriggerSumPanel extends JPanel
     // Determine the minimum distance between from components and the to
     // component...
     int distX = Integer.MAX_VALUE;
-    int distY = aToComponent.component.getHeight();
-    for ( UIElement<?> fromComp : fromComponents )
+    int distY = aUIElement.component.getHeight();
+    for ( UIElement fromComp : backlinks )
     {
-      distX = Math.min( distX, getDistanceBetween( fromComp, aToComponent ) );
+      distX = Math.min( distX, getDistanceBetween( fromComp, aUIElement ) );
     }
 
     final double dX = Math.floor( ( iV / 2.0 ) + 1 );
     final double oX = ( iV - 1 ) / 2.0;
     final double dY = iV + 1;
 
-    final int x3 = aToComponent.component.getX() - padX;
-    final int y3 = aToComponent.component.getY() - 1; // XXX
+    final int x3 = aUIElement.component.getX() - padX;
+    final int y3 = aUIElement.component.getY() - 1; // XXX
 
-    for ( int i = 0; i < fromComponents.length; i++ )
+    for ( int i = 0; i < backlinks.length; i++ )
     {
-      final UIElement<?> fromComponent = fromComponents[i];
-      final Rectangle fromBounds = fromComponent.component.getBounds();
+      final UIElement backlinkUIElement = backlinks[i];
+      final Rectangle fromBounds = backlinkUIElement.component.getBounds();
 
       final int offsetX = ( int )( distX * ( Math.floor( Math.abs( i - oX ) + 0.5 ) / dX ) );
       final int offsetY = ( int )( distY * ( ( i + 1 ) / dY ) );
@@ -393,7 +395,7 @@ public class TriggerSumPanel extends JPanel
       aCanvas.drawLine( x2, y2, x3, y2 );
 
       // Tail recursion: draw the connections to the backlinks...
-      drawTreeConnections( aCanvas, fromComponent );
+      drawTreeConnections( aCanvas, backlinkUIElement );
     }
   }
 
@@ -402,7 +404,7 @@ public class TriggerSumPanel extends JPanel
    * @param aComponent2
    * @return
    */
-  private int getDistanceBetween( final UIElement<?> aComponent1, final UIElement<?> aComponent2 )
+  private int getDistanceBetween( final UIElement aComponent1, final UIElement aComponent2 )
   {
     Rectangle bounds1 = aComponent1.component.getBounds();
     Rectangle bounds2 = aComponent2.component.getBounds();
@@ -421,73 +423,59 @@ public class TriggerSumPanel extends JPanel
    */
   private void initPanel()
   {
-    final int inputCount = INPUT_STAGE_NAMES.length;
-    assert ( inputCount % 2 ) == 0 : "Internal error: input stage names not a multiple of two!";
+    int count = this.model.getInputTerms().length;
+    assert ( count % 2 ) == 0 : "Internal error: input stage names not a multiple of two!";
 
     Dimension maxSize = new Dimension( 0, 0 );
-    this.inputStages = new UIElement[inputCount];
-    for ( int i = 0; i < inputCount; i++ )
+
+    this.inputTerms = new UIElement[count];
+    for ( int i = 0; i < count; i++ )
     {
-      JToggleButton toggleButton = new JToggleButton( INPUT_STAGE_NAMES[i] );
-      toggleButton.addItemListener( new ItemListener()
-      {
-        private static final String PREFIX = "\u2260";
+      final AbstractTriggerTerm term = this.model.getInputTerms()[i];
 
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void itemStateChanged( final ItemEvent aEvent )
-        {
-          JToggleButton tb = ( JToggleButton )aEvent.getSource();
-
-          String name = tb.getText();
-          if ( !tb.isSelected() )
-          {
-            tb.setText( name.substring( 1 ) );
-          }
-          else
-          {
-            tb.setText( PREFIX.concat( name ) );
-          }
-        }
-      } );
-
-      StatePanel component = new StatePanel( toggleButton );
+      final InputTermPanel component = new InputTermPanel( term );
 
       Dimension size = component.getMinimumSize();
       if ( size.width > maxSize.width )
       {
         maxSize = size;
       }
-      this.inputStages[i] = new ButtonUIElement( component );
+      this.inputTerms[i] = new UIElement( component );
     }
-
-    final int pairCount = inputCount / 2;
-    this.pairValueStages = new UIElement[pairCount];
-    for ( int i = 0, j = 0; i < pairCount; i++ )
-    {
-      JComboBox logicalOp = createLogicalOperator( true );
-
-      this.pairValueStages[i] = new ComboBoxUIElement( logicalOp, this.inputStages[j++], this.inputStages[j++] );
-    }
-
-    final int quadCount = pairCount / 4;
-    this.quadValueStages = new UIElement[quadCount];
-    for ( int i = 0, j = 0; i < quadCount; i++ )
-    {
-      this.quadValueStages[i] = new ComboBoxUIElement( createLogicalOperator( false ), this.pairValueStages[j++],
-          this.pairValueStages[j++], this.pairValueStages[j++], this.pairValueStages[j++] );
-    }
-
-    this.endStage = new ComboBoxUIElement( createLogicalOperator( false ), this.quadValueStages[0],
-        this.quadValueStages[1] );
 
     // Make all input stage buttons equally wide...
-    for ( UIElement<?> inputStage : this.inputStages )
+    for ( UIElement inputStage : this.inputTerms )
     {
       inputStage.component.setMinimumSize( maxSize );
       inputStage.component.setPreferredSize( maxSize );
     }
+
+    count >>= 1; // half the number of inputs
+
+    this.pairTerms = new UIElement[count];
+    for ( int i = 0, j = 0; i < count; i++ )
+    {
+      final AbstractTriggerOperationTerm term = this.model.getPairTerms()[i];
+      final OperationPanel component = new OperationPanel( term );
+
+      this.pairTerms[i] = new UIElement( component, this.inputTerms[j++], this.inputTerms[j++] );
+    }
+
+    count >>= 2; // quarter the number of pairs
+
+    this.midTerms = new UIElement[count];
+    for ( int i = 0, j = 0; i < count; i++ )
+    {
+      final AbstractTriggerOperationTerm term = this.model.getMidTerms()[i];
+      final OperationPanel component = new OperationPanel( term );
+
+      this.midTerms[i] = new UIElement( component, this.pairTerms[j++], this.pairTerms[j++], this.pairTerms[j++],
+          this.pairTerms[j++] );
+    }
+
+    final AbstractTriggerOperationTerm term = this.model.getFinalTerm();
+    final OperationPanel component = new OperationPanel( term );
+
+    this.finalTerm = new UIElement( component, this.midTerms[0], this.midTerms[1] );
   }
 }

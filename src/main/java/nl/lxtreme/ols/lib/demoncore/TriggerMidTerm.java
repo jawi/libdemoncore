@@ -27,23 +27,38 @@ import java.io.*;
 /**
  * Denotes a middle term for a trigger sum.
  */
-public class TriggerMidTerm implements ITriggerVisitable
+public class TriggerMidTerm extends AbstractTriggerOperationTerm
 {
   // VARIABLES
 
-  private final TriggerInputTerm termA;
-  private final TriggerInputTerm termB;
-  private final TriggerInputTerm termC;
-  private final TriggerInputTerm termD;
-  private TriggerOperation operation;
+  private final TriggerPairTerm termA;
+  private final TriggerPairTerm termB;
+  private final TriggerPairTerm termC;
+  private final TriggerPairTerm termD;
 
   // CONSTRUCTORS
 
   /**
+   * Creates a new TriggerMidTerm instance as an exact copy of the given mid
+   * term.
+   * 
+   * @param aMidTerm
+   *          the mid term to copy.
+   */
+  public TriggerMidTerm( final TriggerMidTerm aMidTerm )
+  {
+    super( aMidTerm );
+    this.termA = aMidTerm.termA;
+    this.termB = aMidTerm.termB;
+    this.termC = aMidTerm.termC;
+    this.termD = aMidTerm.termD;
+  }
+
+  /**
    * Creates a new TriggerMidTerm instance.
    */
-  public TriggerMidTerm( final TriggerInputTerm aTermA, final TriggerInputTerm aTermB, final TriggerInputTerm aTermC,
-      final TriggerInputTerm aTermD )
+  public TriggerMidTerm( final TriggerPairTerm aTermA, final TriggerPairTerm aTermB, final TriggerPairTerm aTermC,
+      final TriggerPairTerm aTermD )
   {
     if ( ( aTermA == null ) || ( aTermB == null ) || ( aTermC == null ) || ( aTermD == null ) )
     {
@@ -56,41 +71,14 @@ public class TriggerMidTerm implements ITriggerVisitable
     reset();
   }
 
-  /**
-   * Creates a new TriggerMidTerm instance as an exact copy of the given mid
-   * term.
-   * 
-   * @param aMidTerm
-   *          the mid term to copy.
-   */
-  public TriggerMidTerm( final TriggerMidTerm aMidTerm )
-  {
-    this.termA = aMidTerm.termA;
-    this.termB = aMidTerm.termB;
-    this.termC = aMidTerm.termC;
-    this.termD = aMidTerm.termD;
-    this.operation = aMidTerm.operation;
-  }
-
   // METHODS
 
   /**
    * {@inheritDoc}
    */
-  @Override
   public void accept( final ITriggerVisitor aVisitor ) throws IOException
   {
-    aVisitor.visitMidTerm( this );
-  }
-
-  /**
-   * Returns the current value of operation.
-   * 
-   * @return the operation
-   */
-  public TriggerOperation getOperation()
-  {
-    return this.operation;
+    aVisitor.visit( this );
   }
 
   /**
@@ -98,7 +86,7 @@ public class TriggerMidTerm implements ITriggerVisitable
    * 
    * @return the termA
    */
-  public TriggerInputTerm getTermA()
+  public TriggerPairTerm getTermA()
   {
     return this.termA;
   }
@@ -108,7 +96,7 @@ public class TriggerMidTerm implements ITriggerVisitable
    * 
    * @return the termB
    */
-  public TriggerInputTerm getTermB()
+  public TriggerPairTerm getTermB()
   {
     return this.termB;
   }
@@ -118,7 +106,7 @@ public class TriggerMidTerm implements ITriggerVisitable
    * 
    * @return the termC
    */
-  public TriggerInputTerm getTermC()
+  public TriggerPairTerm getTermC()
   {
     return this.termC;
   }
@@ -128,39 +116,21 @@ public class TriggerMidTerm implements ITriggerVisitable
    * 
    * @return the termD
    */
-  public TriggerInputTerm getTermD()
+  public TriggerPairTerm getTermD()
   {
     return this.termD;
   }
 
   /**
-   * Sets operation to the given value.
-   * 
-   * @param aOperation
-   *          the operation to set.
+   * {@inheritDoc}
    */
-  public void setOperation( final TriggerOperation aOperation )
+  @Override
+  protected void reset()
   {
-    if ( aOperation == null )
-    {
-      throw new IllegalArgumentException( "Operation cannot be null!" );
-    }
-    this.operation = aOperation;
-  }
-
-  /**
-   * @return the offset of the current operation.
-   */
-  final int getOffset()
-  {
-    return this.operation.getOffset();
-  }
-
-  /**
-   * Resets this trigger mid term to its initial state.
-   */
-  final void reset()
-  {
-    this.operation = TriggerOperation.OR;
+    super.reset();
+    this.termA.reset();
+    this.termB.reset();
+    this.termC.reset();
+    this.termD.reset();
   }
 }

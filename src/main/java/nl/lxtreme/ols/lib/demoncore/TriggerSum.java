@@ -22,7 +22,6 @@ package nl.lxtreme.ols.lib.demoncore;
 
 
 import java.io.*;
-import java.util.*;
 
 
 /**
@@ -43,7 +42,8 @@ public final class TriggerSum implements ITriggerVisitable
 
   private int stateNumber;
   private final TriggerStateTerm stateTerm;
-  private final TriggerInputTerm[] inputTerms;
+  private final AbstractTriggerTerm[] inputTerms;
+  private final TriggerPairTerm[] pairTerms;
   private final TriggerMidTerm[] midTerms;
   private final TriggerFinalTerm finalTerm;
 
@@ -59,20 +59,27 @@ public final class TriggerSum implements ITriggerVisitable
   {
     this.stateTerm = aStateTerm;
 
+    // The input terms...
+    this.inputTerms = new AbstractTriggerTerm[TERMS.length];
+    for ( int i = 0; i < this.inputTerms.length; i++ )
+    {
+      this.inputTerms[i] = AbstractTriggerTerm.create( TERMS[i] );
+    }
+
     // Create the terms structure...
-    this.inputTerms = new TriggerInputTerm[TERMS.length / 2];
+    this.pairTerms = new TriggerPairTerm[TERMS.length / 2];
     for ( int i = 0, j = 0; i < TERMS.length; i += 2, j++ )
     {
-      final AbstractTriggerTerm termA = AbstractTriggerTerm.create( TERMS[i] );
-      final AbstractTriggerTerm termB = AbstractTriggerTerm.create( TERMS[i + 1] );
-      this.inputTerms[j] = new TriggerInputTerm( termA, termB );
+      final AbstractTriggerTerm termA = this.inputTerms[i];
+      final AbstractTriggerTerm termB = this.inputTerms[i + 1];
+      this.pairTerms[j] = new TriggerPairTerm( termA, termB );
     }
 
     this.midTerms = new TriggerMidTerm[2];
     for ( int i = 0, j = 0; i < ( TERMS.length / 2 ); i += 4, j++ )
     {
-      this.midTerms[j] = new TriggerMidTerm( this.inputTerms[i], this.inputTerms[i + 1], this.inputTerms[i + 2],
-          this.inputTerms[i + 3] );
+      this.midTerms[j] = new TriggerMidTerm( this.pairTerms[i], this.pairTerms[i + 1], this.pairTerms[i + 2],
+          this.pairTerms[i + 3] );
     }
 
     this.finalTerm = new TriggerFinalTerm( this.midTerms[0], this.midTerms[1] );
@@ -91,14 +98,9 @@ public final class TriggerSum implements ITriggerVisitable
   {
     this.stateTerm = aSum.stateTerm;
     this.stateNumber = aSum.stateNumber;
-    this.inputTerms = Arrays.copyOf( aSum.inputTerms, aSum.inputTerms.length ); // XXX
-                                                                                // copy
-                                                                                // individual
-                                                                                // terms!
-    this.midTerms = Arrays.copyOf( aSum.midTerms, aSum.midTerms.length ); // XXX
-                                                                          // copy
-                                                                          // individual
-                                                                          // terms!
+    this.inputTerms = Utils.deepCopy( aSum.inputTerms );
+    this.pairTerms = Utils.deepCopy( aSum.pairTerms );
+    this.midTerms = Utils.deepCopy( aSum.midTerms );
     this.finalTerm = new TriggerFinalTerm( aSum.finalTerm );
   }
 
@@ -110,7 +112,7 @@ public final class TriggerSum implements ITriggerVisitable
   @Override
   public void accept( final ITriggerVisitor aVisitor ) throws IOException
   {
-    aVisitor.visitTriggerSum( this );
+    aVisitor.visit( this );
     this.finalTerm.accept( aVisitor );
   }
 
@@ -125,11 +127,9 @@ public final class TriggerSum implements ITriggerVisitable
   }
 
   /**
-   * Returns the current value of inputTerms.
-   * 
-   * @return the inputTerms
+   * @return an array of input terms, never <code>null</code>.
    */
-  public TriggerInputTerm[] getInputTerms()
+  public AbstractTriggerTerm[] getInputTerms()
   {
     return this.inputTerms;
   }
@@ -142,6 +142,16 @@ public final class TriggerSum implements ITriggerVisitable
   public TriggerMidTerm[] getMidTerms()
   {
     return this.midTerms;
+  }
+
+  /**
+   * Returns the current value of pair terms.
+   * 
+   * @return the pair terms
+   */
+  public TriggerPairTerm[] getPairTerms()
+  {
+    return this.pairTerms;
   }
 
   /**
@@ -178,7 +188,7 @@ public final class TriggerSum implements ITriggerVisitable
   void reset()
   {
     this.stateNumber = 0;
-    for ( TriggerInputTerm inputTerm : this.inputTerms )
+    for ( AbstractTriggerOperationTerm inputTerm : this.pairTerms )
     {
       inputTerm.reset();
     }

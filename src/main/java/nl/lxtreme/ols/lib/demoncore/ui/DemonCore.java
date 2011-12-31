@@ -102,11 +102,6 @@ public class DemonCore extends ResourceBundle
       { rANY, "Any (= 1)" }, //
       { rNOP, "Nop (= 0)" }, //
       // Combines resources...
-      { "rInputStageNames", new String[] { rTERM_A, rTERM_B, rTERM_C, //
-          rIN_RANGE1, rTERM_D, rEDGE1, rTERM_E, rTIMER1, rTERM_F, //
-          rTERM_G, rTERM_H, rIN_RANGE2, rTERM_I, rEDGE2, rTERM_J, rTIMER2 } }, //
-      { "rInputLogicalOperations", new String[] { rAND, rNAND, //
-          rOR, rNOR, rXOR, rXNOR, rA_ONLY, rB_ONLY, rANY, rNOP } }, //
       { "rOtherLogicalOperations", new String[] { rAND, rNAND, //
           rOR, rNOR, rXOR, rXNOR, rANY, rNOP } }, //
   };

@@ -41,7 +41,16 @@ public class DemonCoreCommandWriter
      * {@inheritDoc}
      */
     @Override
-    public void visitFinalTerm( final TriggerFinalTerm aTerm ) throws IOException
+    public void visit( final AbstractTriggerTerm aTerm ) throws IOException
+    {
+      // NO-op
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void visit( final TriggerFinalTerm aTerm ) throws IOException
     {
       writeChain( FINAL_VALUE[aTerm.getOffset()] );
       writeChain( ( MID_VALUE[aTerm.getTermB().getOffset()] << 16 ) | MID_VALUE[aTerm.getTermA().getOffset()] );
@@ -51,16 +60,7 @@ public class DemonCoreCommandWriter
      * {@inheritDoc}
      */
     @Override
-    public void visitInputTerm( final TriggerInputTerm aTerm ) throws IOException
-    {
-      // NO-op
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void visitMidTerm( final TriggerMidTerm aTerm ) throws IOException
+    public void visit( final TriggerMidTerm aTerm ) throws IOException
     {
       writeChain( ( PAIR_VALUE[aTerm.getTermD().getOffset()] << 16 ) | PAIR_VALUE[aTerm.getTermC().getOffset()] );
       writeChain( ( PAIR_VALUE[aTerm.getTermB().getOffset()] << 16 ) | PAIR_VALUE[aTerm.getTermA().getOffset()] );
@@ -70,7 +70,7 @@ public class DemonCoreCommandWriter
      * {@inheritDoc}
      */
     @Override
-    public void visitTerm( final AbstractTriggerTerm aTerm ) throws IOException
+    public void visit( final TriggerPairTerm aTerm ) throws IOException
     {
       // NO-op
     }
@@ -79,7 +79,7 @@ public class DemonCoreCommandWriter
      * {@inheritDoc}
      */
     @Override
-    public void visitTriggerSequence( final TriggerSequenceState aTriggerSequenceState ) throws IOException
+    public void visit( final TriggerSequenceState aTriggerSequenceState ) throws IOException
     {
       // Select the correct LUT chain...
       writeSelect( aTriggerSequenceState.getStateNumber() & TRIGSTATE_STATENUM_MASK );
@@ -127,7 +127,7 @@ public class DemonCoreCommandWriter
      * {@inheritDoc}
      */
     @Override
-    public void visitTriggerSum( final TriggerSum aSum ) throws IOException
+    public void visit( final TriggerSum aSum ) throws IOException
     {
       writeSelect( aSum.getOffset() );
     }
@@ -142,34 +142,7 @@ public class DemonCoreCommandWriter
      * {@inheritDoc}
      */
     @Override
-    public void visitFinalTerm( final TriggerFinalTerm aTerm ) throws IOException
-    {
-      // NO-op
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void visitInputTerm( final TriggerInputTerm aTerm ) throws IOException
-    {
-      // NO-op
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void visitMidTerm( final TriggerMidTerm aTerm ) throws IOException
-    {
-      // NO-op
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void visitTerm( final AbstractTriggerTerm aTerm ) throws IOException
+    public void visit( final AbstractTriggerTerm aTerm ) throws IOException
     {
       final TriggerTermType termType = aTerm.getType();
       switch ( termType )
@@ -208,7 +181,7 @@ public class DemonCoreCommandWriter
      * {@inheritDoc}
      */
     @Override
-    public void visitTriggerSequence( final TriggerSequenceState aTriggerSequenceState ) throws IOException
+    public void visit( final TriggerFinalTerm aTerm ) throws IOException
     {
       // NO-op
     }
@@ -217,7 +190,34 @@ public class DemonCoreCommandWriter
      * {@inheritDoc}
      */
     @Override
-    public void visitTriggerSum( final TriggerSum aSum ) throws IOException
+    public void visit( final TriggerMidTerm aTerm ) throws IOException
+    {
+      // NO-op
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void visit( final TriggerPairTerm aTerm ) throws IOException
+    {
+      // NO-op
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void visit( final TriggerSequenceState aTriggerSequenceState ) throws IOException
+    {
+      // NO-op
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void visit( final TriggerSum aSum ) throws IOException
     {
       // NO-op
     }

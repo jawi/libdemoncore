@@ -25,40 +25,40 @@ import java.io.*;
 
 
 /**
- * Denotes the final trigger term for a trigger sum.
+ * Denotes an input term for a trigger sum.
  */
-public class TriggerFinalTerm extends AbstractTriggerOperationTerm
+public class TriggerPairTerm extends AbstractTriggerOperationTerm
 {
   // VARIABLES
 
-  private final TriggerMidTerm termA;
-  private final TriggerMidTerm termB;
+  private final AbstractTriggerTerm termA;
+  private final AbstractTriggerTerm termB;
 
   // CONSTRUCTORS
 
   /**
-   * Creates a new TriggerFinalTerm instance as an exact copy of the given
-   * trigger input term.
+   * Creates a new TriggerInputTerm instance.
    */
-  public TriggerFinalTerm( final TriggerFinalTerm aFinalTerm )
-  {
-    super( aFinalTerm );
-    this.termA = aFinalTerm.termA;
-    this.termB = aFinalTerm.termB;
-  }
-
-  /**
-   * Creates a new TriggerFinalTerm instance.
-   */
-  public TriggerFinalTerm( final TriggerMidTerm aTermA, final TriggerMidTerm aTermB )
+  public TriggerPairTerm( final AbstractTriggerTerm aTermA, final AbstractTriggerTerm aTermB )
   {
     if ( ( aTermA == null ) || ( aTermB == null ) )
     {
-      throw new IllegalArgumentException( "None of the mid terms can be null!" );
+      throw new IllegalArgumentException( "None of the trigger terms can be null!" );
     }
     this.termA = aTermA;
     this.termB = aTermB;
     reset();
+  }
+
+  /**
+   * Creates a new TriggerInputTerm instance as an exact copy of the given
+   * trigger input term.
+   */
+  public TriggerPairTerm( final TriggerPairTerm aInput )
+  {
+    super( aInput );
+    this.termA = aInput.termA;
+    this.termB = aInput.termB;
   }
 
   // METHODS
@@ -66,6 +66,7 @@ public class TriggerFinalTerm extends AbstractTriggerOperationTerm
   /**
    * {@inheritDoc}
    */
+  @Override
   public void accept( final ITriggerVisitor aVisitor ) throws IOException
   {
     aVisitor.visit( this );
@@ -76,7 +77,7 @@ public class TriggerFinalTerm extends AbstractTriggerOperationTerm
    * 
    * @return the termA
    */
-  public TriggerMidTerm getTermA()
+  public AbstractTriggerTerm getTermA()
   {
     return this.termA;
   }
@@ -86,7 +87,7 @@ public class TriggerFinalTerm extends AbstractTriggerOperationTerm
    * 
    * @return the termB
    */
-  public TriggerMidTerm getTermB()
+  public AbstractTriggerTerm getTermB()
   {
     return this.termB;
   }
@@ -98,6 +99,7 @@ public class TriggerFinalTerm extends AbstractTriggerOperationTerm
   protected void reset()
   {
     super.reset();
+
     this.termA.reset();
     this.termB.reset();
   }

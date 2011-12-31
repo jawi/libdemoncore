@@ -149,7 +149,7 @@ public abstract class AbstractTriggerTerm implements ITriggerVisitable
   @Override
   public final void accept( final ITriggerVisitor aVisitor ) throws IOException
   {
-    aVisitor.visitTerm( this );
+    aVisitor.visit( this );
   }
 
   /**
@@ -221,6 +221,16 @@ public abstract class AbstractTriggerTerm implements ITriggerVisitable
   public final void setInverted()
   {
     this.state = TriggerInputState.ENABLED_INVERTED;
+  }
+
+  /**
+   * Sets the current value of state.
+   * 
+   * @return the state
+   */
+  public final void setState( final TriggerInputState aState )
+  {
+    this.state = aState;
   }
 
   /**
