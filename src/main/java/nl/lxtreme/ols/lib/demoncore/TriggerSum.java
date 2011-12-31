@@ -98,10 +98,25 @@ public final class TriggerSum implements ITriggerVisitable
   {
     this.stateTerm = aSum.stateTerm;
     this.stateNumber = aSum.stateNumber;
-    this.inputTerms = Utils.deepCopy( aSum.inputTerms );
-    this.pairTerms = Utils.deepCopy( aSum.pairTerms );
-    this.midTerms = Utils.deepCopy( aSum.midTerms );
+
+    // Recursively copies all other (mid/pair/input) terms as well!
     this.finalTerm = new TriggerFinalTerm( aSum.finalTerm );
+
+    this.midTerms = this.finalTerm.getMidTerms();
+
+    this.pairTerms = new TriggerPairTerm[TERMS.length / 2];
+    for ( int i = 0, j = 0; i < this.midTerms.length; i++, j += 4 )
+    {
+      final TriggerPairTerm[] origTerms = this.midTerms[i].getTerms();
+      System.arraycopy( origTerms, 0, this.pairTerms, j, origTerms.length );
+    }
+
+    this.inputTerms = new AbstractTriggerTerm[TERMS.length];
+    for ( int i = 0, j = 0; i < this.pairTerms.length; i++, j += 2 )
+    {
+      final AbstractTriggerTerm[] origTerms = this.pairTerms[i].getTerms();
+      System.arraycopy( origTerms, 0, this.inputTerms, j, origTerms.length );
+    }
   }
 
   // METHODS

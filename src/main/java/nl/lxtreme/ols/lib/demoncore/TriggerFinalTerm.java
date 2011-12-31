@@ -43,8 +43,8 @@ public class TriggerFinalTerm extends AbstractTriggerOperationTerm
   public TriggerFinalTerm( final TriggerFinalTerm aFinalTerm )
   {
     super( aFinalTerm );
-    this.termA = aFinalTerm.termA;
-    this.termB = aFinalTerm.termB;
+    this.termA = new TriggerMidTerm( aFinalTerm.termA );
+    this.termB = new TriggerMidTerm( aFinalTerm.termB );
   }
 
   /**
@@ -89,6 +89,14 @@ public class TriggerFinalTerm extends AbstractTriggerOperationTerm
   public TriggerMidTerm getTermB()
   {
     return this.termB;
+  }
+
+  /**
+   * @return
+   */
+  final TriggerMidTerm[] getMidTerms()
+  {
+    return new TriggerMidTerm[] { this.termA, this.termB };
   }
 
   /**

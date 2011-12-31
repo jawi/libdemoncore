@@ -42,6 +42,9 @@ public class TriggerRangeDetector extends AbstractTriggerTerm
   public TriggerRangeDetector( final TriggerRangeDetector aTerm )
   {
     super( aTerm );
+    this.mask = aTerm.mask;
+    this.lowerTarget = aTerm.lowerTarget;
+    this.upperTarget = aTerm.upperTarget;
   }
 
   /**

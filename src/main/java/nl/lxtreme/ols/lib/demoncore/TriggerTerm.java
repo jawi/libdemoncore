@@ -42,6 +42,8 @@ public class TriggerTerm extends AbstractTriggerTerm
   public TriggerTerm( final TriggerTerm aTerm )
   {
     super( aTerm );
+    this.value = aTerm.value;
+    this.mask = aTerm.mask;
   }
 
   /**

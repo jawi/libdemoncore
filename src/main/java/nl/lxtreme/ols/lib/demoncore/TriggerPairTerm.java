@@ -57,8 +57,8 @@ public class TriggerPairTerm extends AbstractTriggerOperationTerm
   public TriggerPairTerm( final TriggerPairTerm aInput )
   {
     super( aInput );
-    this.termA = aInput.termA;
-    this.termB = aInput.termB;
+    this.termA = AbstractTriggerTerm.create( aInput.termA );
+    this.termB = AbstractTriggerTerm.create( aInput.termB );
   }
 
   // METHODS
@@ -90,6 +90,14 @@ public class TriggerPairTerm extends AbstractTriggerOperationTerm
   public AbstractTriggerTerm getTermB()
   {
     return this.termB;
+  }
+
+  /**
+   * @return
+   */
+  final AbstractTriggerTerm[] getTerms()
+  {
+    return new AbstractTriggerTerm[] { this.termA, this.termB };
   }
 
   /**

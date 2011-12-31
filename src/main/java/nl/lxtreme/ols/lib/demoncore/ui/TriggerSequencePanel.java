@@ -39,9 +39,9 @@ public class TriggerSequencePanel extends JPanel
   // INNER TYPES
 
   /**
-   * 
+   * Provides a trigger sum edit action.
    */
-  final class TriggerSumEditAction extends AbstractAction
+  static final class TriggerSumEditAction extends AbstractAction
   {
     // CONSTANTS
 
@@ -49,18 +49,26 @@ public class TriggerSequencePanel extends JPanel
 
     // VARIABLES
 
+    private final TriggerSumStringifier triggerSumStringifier;
     private final TriggerStateTerm stateTermType;
     private final TriggerSequenceState triggerSequence;
+    private final TriggerMode mode;
 
     // CONSTRUCTORS
 
     /**
-     * Creates a new TriggerSequencePanel.TriggerSumEditAction instance.
+     * Creates a new {@link TriggerSumEditAction} instance.
      */
-    public TriggerSumEditAction( final TriggerStateTerm aStateTermType, final TriggerSequenceState aTriggerSequenceState )
+    public TriggerSumEditAction( final TriggerStateTerm aStateTermType, final TriggerMode aMode,
+        final TriggerSequenceState aTriggerSequenceState )
     {
       this.stateTermType = aStateTermType;
+      this.mode = aMode;
       this.triggerSequence = aTriggerSequenceState;
+
+      this.triggerSumStringifier = new TriggerSumStringifier();
+
+      updateName();
     }
 
     // METHODS
@@ -69,17 +77,45 @@ public class TriggerSequencePanel extends JPanel
      * {@inheritDoc}
      */
     @Override
-    public void actionPerformed( final ActionEvent aE )
+    public void actionPerformed( final ActionEvent aEvent )
     {
-      final TriggerSum sum = this.triggerSequence.getTriggerSum( this.stateTermType );
-
-      final TriggerSumEditor editor = new TriggerSumEditor( TriggerSequencePanel.this.mode, sum );
+      final TriggerSumEditor editor = new TriggerSumEditor( this.mode, getTriggerSum() );
       if ( editor.showDialog() )
       {
-        this.triggerSequence.setTriggerSum( this.stateTermType, editor.getTriggerSum() );
+        setTriggerSum( editor.getTriggerSum() );
       }
 
-      putValue( NAME, asString( this.triggerSequence.getTriggerSum( this.stateTermType ) ) );
+      updateName();
+    }
+
+    /**
+     * Returns the current trigger sum.
+     * 
+     * @return a trigger sum, never <code>null</code>.
+     */
+    private TriggerSum getTriggerSum()
+    {
+      return this.triggerSequence.getTriggerSum( this.stateTermType );
+    }
+
+    /**
+     * Sets the trigger sum to the one given.
+     * 
+     * @param aSum
+     *          the trigger sum to set, cannot be <code>null</code>.
+     */
+    private void setTriggerSum( final TriggerSum aSum )
+    {
+      this.triggerSequence.setTriggerSum( this.stateTermType, aSum );
+    }
+
+    /**
+     * Updates the name of this action according to the human-readable
+     * representation of the contained trigger sum.
+     */
+    private void updateName()
+    {
+      putValue( NAME, this.triggerSumStringifier.toString( getTriggerSum() ) );
     }
   }
 
@@ -91,7 +127,6 @@ public class TriggerSequencePanel extends JPanel
 
   // VARIABLES
 
-  private final TriggerSumStringifier triggerSumStringifier;
   private final TriggerSequenceState model;
   private final TriggerMode mode;
 
@@ -123,7 +158,6 @@ public class TriggerSequencePanel extends JPanel
     this.mode = aMode;
     // Create a copy of the given model as to not directly modify it!!!
     this.model = new TriggerSequenceState( aModel );
-    this.triggerSumStringifier = new TriggerSumStringifier();
 
     initPanel();
     buildPanel();
@@ -139,15 +173,6 @@ public class TriggerSequencePanel extends JPanel
   public TriggerSequenceState getTriggerSequence()
   {
     return this.model;
-  }
-
-  /**
-   * @param aTriggerSum
-   * @return
-   */
-  final String asString( final TriggerSum aTriggerSum )
-  {
-    return this.triggerSumStringifier.toString( aTriggerSum );
   }
 
   /**
@@ -320,9 +345,9 @@ public class TriggerSequencePanel extends JPanel
     final Integer stateNr = Integer.valueOf( this.model.getStateNumber() );
     this.title = new JLabel( String.format( RB.getString( "rSequenceLevel" ), modeStr, stateNr ) );
 
-    this.captureTerm = new JButton( new TriggerSumEditAction( TriggerStateTerm.CAPTURE, this.model ) );
-    this.hitTerm = new JButton( new TriggerSumEditAction( TriggerStateTerm.HIT, this.model ) );
-    this.elseTerm = new JButton( new TriggerSumEditAction( TriggerStateTerm.ELSE, this.model ) );
+    this.captureTerm = new JButton( new TriggerSumEditAction( TriggerStateTerm.CAPTURE, this.mode, this.model ) );
+    this.hitTerm = new JButton( new TriggerSumEditAction( TriggerStateTerm.HIT, this.mode, this.model ) );
+    this.elseTerm = new JButton( new TriggerSumEditAction( TriggerStateTerm.ELSE, this.mode, this.model ) );
 
     this.setTrigger = new JCheckBox( RB.getString( "rSetTrigger" ) );
     this.timerControl = new JButton( RB.getString( "rTimerControl" ) );

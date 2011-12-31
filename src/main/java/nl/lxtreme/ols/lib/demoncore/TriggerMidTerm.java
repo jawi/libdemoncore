@@ -48,10 +48,10 @@ public class TriggerMidTerm extends AbstractTriggerOperationTerm
   public TriggerMidTerm( final TriggerMidTerm aMidTerm )
   {
     super( aMidTerm );
-    this.termA = aMidTerm.termA;
-    this.termB = aMidTerm.termB;
-    this.termC = aMidTerm.termC;
-    this.termD = aMidTerm.termD;
+    this.termA = new TriggerPairTerm( aMidTerm.termA );
+    this.termB = new TriggerPairTerm( aMidTerm.termB );
+    this.termC = new TriggerPairTerm( aMidTerm.termC );
+    this.termD = new TriggerPairTerm( aMidTerm.termD );
   }
 
   /**
@@ -119,6 +119,14 @@ public class TriggerMidTerm extends AbstractTriggerOperationTerm
   public TriggerPairTerm getTermD()
   {
     return this.termD;
+  }
+
+  /**
+   * @return
+   */
+  final TriggerPairTerm[] getTerms()
+  {
+    return new TriggerPairTerm[] { this.termA, this.termB, this.termC, this.termD };
   }
 
   /**

@@ -42,6 +42,9 @@ public class TriggerEdgeDetector extends AbstractTriggerTerm
   public TriggerEdgeDetector( final TriggerEdgeDetector aTerm )
   {
     super( aTerm );
+    this.risingEdgeMask = aTerm.risingEdgeMask;
+    this.fallingEdgeMask = aTerm.fallingEdgeMask;
+    this.noEdgeMask = aTerm.noEdgeMask;
   }
 
   /**
