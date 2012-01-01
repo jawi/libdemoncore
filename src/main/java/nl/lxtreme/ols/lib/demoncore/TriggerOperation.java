@@ -21,9 +21,6 @@
 package nl.lxtreme.ols.lib.demoncore;
 
 
-import nl.lxtreme.ols.lib.demoncore.ui.*;
-
-
 /**
  * Denotes a trigger sum operation.
  */
@@ -32,30 +29,29 @@ public enum TriggerOperation
   // CONSTANTS
 
   /** No-operation (= always 0). */
-  NOP( 0, DemonCore.rNOP, false /* inverted */),
+  NOP( 0, false /* inverted */),
   /** Any operation (= always 1). */
-  ANY( 1, DemonCore.rANY, false /* inverted */),
+  ANY( 1, false /* inverted */),
   /** Logical AND. */
-  AND( 2, DemonCore.rAND, false /* inverted */),
+  AND( 2, false /* inverted */),
   /** Logical NAND. */
-  NAND( 3, DemonCore.rNAND, true /* inverted */),
+  NAND( 3, true /* inverted */),
   /** Logical OR. */
-  OR( 4, DemonCore.rOR, false /* inverted */),
+  OR( 4, false /* inverted */),
   /** Logical NOR. */
-  NOR( 5, DemonCore.rNOR, true /* inverted */),
+  NOR( 5, true /* inverted */),
   /** Logical XOR. */
-  XOR( 6, DemonCore.rXOR, false /* inverted */),
+  XOR( 6, false /* inverted */),
   /** Logical NXOR. */
-  NXOR( 7, DemonCore.rXNOR, true /* inverted */),
+  NXOR( 7, true /* inverted */),
   /** A only */
-  A_ONLY( 8, DemonCore.rA_ONLY, false /* inverted */),
+  A_ONLY( 8, false /* inverted */),
   /** B only */
-  B_ONLY( 9, DemonCore.rB_ONLY, false /* inverted */);
+  B_ONLY( 9, false /* inverted */);
 
   // VARIABLES
 
   private final int offset;
-  private final String resourceKey;
   private final boolean inverted;
 
   // CONSTRUCTORS
@@ -66,10 +62,9 @@ public enum TriggerOperation
    * @param aOffset
    *          the offset of this {@link TriggerOperation}.
    */
-  private TriggerOperation( final int aOffset, final String aResourceKey, final boolean aInverted )
+  private TriggerOperation( final int aOffset, final boolean aInverted )
   {
     this.offset = aOffset;
-    this.resourceKey = aResourceKey;
     this.inverted = aInverted;
   }
 
@@ -83,16 +78,6 @@ public enum TriggerOperation
   public int getOffset()
   {
     return this.offset;
-  }
-
-  /**
-   * Returns the current value of resourceKey.
-   * 
-   * @return the resourceKey
-   */
-  public String getResourceKey()
-  {
-    return this.resourceKey;
   }
 
   /**

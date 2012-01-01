@@ -68,6 +68,9 @@ public class TriggerFinalTerm extends AbstractTriggerOperationTerm
    */
   public void accept( final ITriggerVisitor aVisitor ) throws IOException
   {
+    this.termB.accept( aVisitor );
+    this.termA.accept( aVisitor );
+
     aVisitor.visit( this );
   }
 

@@ -78,6 +78,11 @@ public class TriggerMidTerm extends AbstractTriggerOperationTerm
    */
   public void accept( final ITriggerVisitor aVisitor ) throws IOException
   {
+    this.termD.accept( aVisitor );
+    this.termC.accept( aVisitor );
+    this.termB.accept( aVisitor );
+    this.termA.accept( aVisitor );
+
     aVisitor.visit( this );
   }
 

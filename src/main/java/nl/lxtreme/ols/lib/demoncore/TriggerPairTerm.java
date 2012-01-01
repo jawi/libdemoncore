@@ -69,6 +69,9 @@ public class TriggerPairTerm extends AbstractTriggerOperationTerm
   @Override
   public void accept( final ITriggerVisitor aVisitor ) throws IOException
   {
+    this.termB.accept( aVisitor );
+    this.termA.accept( aVisitor );
+
     aVisitor.visit( this );
   }
 

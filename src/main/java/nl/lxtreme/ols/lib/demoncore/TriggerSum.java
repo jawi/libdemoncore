@@ -21,6 +21,8 @@
 package nl.lxtreme.ols.lib.demoncore;
 
 
+import static nl.lxtreme.ols.lib.demoncore.TriggerTermType.*;
+
 import java.io.*;
 
 
@@ -32,11 +34,8 @@ public final class TriggerSum implements ITriggerVisitable
   // CONSTANTS
 
   /** The order in which the terms are inputted. */
-  private static final TriggerTermType[] TERMS = { TriggerTermType.TERM_A, TriggerTermType.TERM_B,
-      TriggerTermType.TERM_C, TriggerTermType.TERM_RANGE1, TriggerTermType.TERM_D, TriggerTermType.TERM_EDGE1,
-      TriggerTermType.TERM_E, TriggerTermType.TERM_TIMER1, TriggerTermType.TERM_F, TriggerTermType.TERM_G,
-      TriggerTermType.TERM_H, TriggerTermType.TERM_RANGE2, TriggerTermType.TERM_I, TriggerTermType.TERM_EDGE2,
-      TriggerTermType.TERM_J, TriggerTermType.TERM_TIMER2 };
+  private static final TriggerTermType[] TERMS = { TERM_A, TERM_B, TERM_C, TERM_RANGE1, TERM_D, TERM_EDGE1, TERM_E,
+      TERM_TIMER1, TERM_F, TERM_G, TERM_H, TERM_RANGE2, TERM_I, TERM_EDGE2, TERM_J, TERM_TIMER2 };
 
   // VARIABLES
 
@@ -127,8 +126,9 @@ public final class TriggerSum implements ITriggerVisitable
   @Override
   public void accept( final ITriggerVisitor aVisitor ) throws IOException
   {
-    aVisitor.visit( this );
     this.finalTerm.accept( aVisitor );
+
+    aVisitor.visit( this );
   }
 
   /**

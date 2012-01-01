@@ -49,7 +49,7 @@ public class TriggerSequencePanel extends JPanel
 
     // VARIABLES
 
-    private final TriggerSumStringifier triggerSumStringifier;
+    private final TriggerStringifier triggerStringifier;
     private final TriggerStateTerm stateTermType;
     private final TriggerSequenceState triggerSequence;
     private final TriggerMode mode;
@@ -66,7 +66,7 @@ public class TriggerSequencePanel extends JPanel
       this.mode = aMode;
       this.triggerSequence = aTriggerSequenceState;
 
-      this.triggerSumStringifier = new TriggerSumStringifier();
+      this.triggerStringifier = new TriggerStringifier();
 
       updateName();
     }
@@ -115,7 +115,7 @@ public class TriggerSequencePanel extends JPanel
      */
     private void updateName()
     {
-      putValue( NAME, this.triggerSumStringifier.toString( getTriggerSum() ) );
+      putValue( NAME, this.triggerStringifier.toString( getTriggerSum() ) );
     }
   }
 
@@ -123,7 +123,7 @@ public class TriggerSequencePanel extends JPanel
 
   private static final long serialVersionUID = 1L;
 
-  private static final ResourceBundle RB = ResourceBundle.getBundle( "nl.lxtreme.ols.lib.demoncore.ui.DemonCore" );
+  private static final ResourceBundle RB = ResourceBundle.getBundle( DemonCore.class.getName() );
 
   // VARIABLES
 

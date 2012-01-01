@@ -141,7 +141,7 @@ public class TriggerSumPanel extends JPanel
      */
     private String getInversionButtonText()
     {
-      final String text = TriggerSumStringifier.asString( this.term );
+      final String text = TriggerStringifier.asString( this.term );
       if ( this.term.isInverted() )
       {
         return PREFIX.concat( text );

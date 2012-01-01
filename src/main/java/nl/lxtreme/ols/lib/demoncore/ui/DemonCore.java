@@ -65,7 +65,7 @@ public class DemonCore extends ResourceBundle
       { "rSTATE", "State" }, //
       { "rSequenceLevel", "%s sequence level %d" }, //
       { "rWhileStoring", "While storing" }, //
-      { "rIfTarget", "If target" }, //
+      { "rIfTarget", "If" }, //
       { "rOccurs", "occurs for" }, //
       { "rSamples", "samples" }, //
       { "rOnHit", "On hit" }, //
@@ -73,7 +73,6 @@ public class DemonCore extends ResourceBundle
       { "rGotoLevel", "go to level" }, //
       { "rSetTrigger", "Set trigger" }, //
       { "rTimerControl", "Timer control..." }, //
-
       // Trigger sum resources...
       { rTERM_A, "A" }, //
       { rTERM_B, "B" }, //
@@ -99,8 +98,8 @@ public class DemonCore extends ResourceBundle
       { rXNOR, "NXOR" }, //
       { rA_ONLY, "A only" }, //
       { rB_ONLY, "B only" }, //
-      { rANY, "Any (= 1)" }, //
-      { rNOP, "Nop (= 0)" }, //
+      { rANY, "Any state" }, //
+      { rNOP, "No state" }, //
       // Combines resources...
       { "rOtherLogicalOperations", new String[] { rAND, rNAND, //
           rOR, rNOR, rXOR, rXNOR, rANY, rNOP } }, //

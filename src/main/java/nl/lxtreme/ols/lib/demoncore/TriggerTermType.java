@@ -21,9 +21,6 @@
 package nl.lxtreme.ols.lib.demoncore;
 
 
-import nl.lxtreme.ols.lib.demoncore.ui.*;
-
-
 /**
  * Denotes one of the trigger terms.
  */
@@ -32,42 +29,41 @@ public enum TriggerTermType
   // CONSTANTS
 
   /** The 1st term. */
-  TERM_A( 0x20, DemonCore.rTERM_A ), //
+  TERM_A( 0x20 ), //
   /** The 2nd term. */
-  TERM_B( 0x21, DemonCore.rTERM_B ), //
+  TERM_B( 0x21 ), //
   /** The 3rd term. */
-  TERM_C( 0x22, DemonCore.rTERM_C ), //
+  TERM_C( 0x22 ), //
   /** The 4th term. */
-  TERM_D( 0x23, DemonCore.rTERM_D ), //
+  TERM_D( 0x23 ), //
   /** The 5th term. */
-  TERM_E( 0x24, DemonCore.rTERM_E ), //
+  TERM_E( 0x24 ), //
   /** The 6th term. */
-  TERM_F( 0x25, DemonCore.rTERM_F ), //
+  TERM_F( 0x25 ), //
   /** The 7th term. */
-  TERM_G( 0x26, DemonCore.rTERM_G ), //
+  TERM_G( 0x26 ), //
   /** The 8th term. */
-  TERM_H( 0x27, DemonCore.rTERM_H ), //
+  TERM_H( 0x27 ), //
   /** The 9th term. */
-  TERM_I( 0x28, DemonCore.rTERM_I ), //
+  TERM_I( 0x28 ), //
   /** The 10th term. */
-  TERM_J( 0x29, DemonCore.rTERM_J ),
+  TERM_J( 0x29 ),
   /** The range 1 term. */
-  TERM_RANGE1( 0x30, DemonCore.rIN_RANGE1 ),
+  TERM_RANGE1( 0x30 ),
   /** The range 2 term. */
-  TERM_RANGE2( 0x32, DemonCore.rIN_RANGE2 ),
+  TERM_RANGE2( 0x32 ),
   /** The edge 1 term. */
-  TERM_EDGE1( 0x34, DemonCore.rEDGE1 ),
+  TERM_EDGE1( 0x34 ),
   /** The edge 2 term. */
-  TERM_EDGE2( 0x35, DemonCore.rEDGE2 ),
+  TERM_EDGE2( 0x35 ),
   /** The timer 1 term. */
-  TERM_TIMER1( 0x38, DemonCore.rTIMER1 ),
+  TERM_TIMER1( 0x38 ),
   /** The timer 2 term. */
-  TERM_TIMER2( 0x3A, DemonCore.rTIMER2 );
+  TERM_TIMER2( 0x3A );
 
   // VARIABLES
 
   private final int lutChainAddress;
-  private final String resourceKey;
 
   // CONSTRUCTORS
 
@@ -77,10 +73,9 @@ public enum TriggerTermType
    * @param aLutChainAddress
    *          the LUT chain address to use.
    */
-  private TriggerTermType( final int aLutChainAddress, final String aResourceKey )
+  private TriggerTermType( final int aLutChainAddress )
   {
     this.lutChainAddress = aLutChainAddress;
-    this.resourceKey = aResourceKey;
   }
 
   // METHODS
@@ -93,15 +88,5 @@ public enum TriggerTermType
   public int getLutChainAddress()
   {
     return this.lutChainAddress;
-  }
-
-  /**
-   * Returns the current value of resourceKey.
-   * 
-   * @return the resourceKey
-   */
-  public String getResourceKey()
-  {
-    return this.resourceKey;
   }
 }

@@ -92,12 +92,11 @@ public final class TriggerSequenceState implements ITriggerVisitable
   @Override
   public void accept( final ITriggerVisitor aVisitor ) throws IOException
   {
-    aVisitor.visit( this );
+    getTriggerSum( TriggerStateTerm.CAPTURE ).accept( aVisitor );
+    getTriggerSum( TriggerStateTerm.HIT ).accept( aVisitor );
+    getTriggerSum( TriggerStateTerm.ELSE ).accept( aVisitor );
 
-    for ( TriggerSum sum : this.sums )
-    {
-      sum.accept( aVisitor );
-    }
+    aVisitor.visit( this );
   }
 
   /**
