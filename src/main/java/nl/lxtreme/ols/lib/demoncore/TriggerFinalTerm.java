@@ -95,14 +95,6 @@ public class TriggerFinalTerm extends AbstractTriggerOperationTerm
   }
 
   /**
-   * @return
-   */
-  final TriggerMidTerm[] getMidTerms()
-  {
-    return new TriggerMidTerm[] { this.termA, this.termB };
-  }
-
-  /**
    * {@inheritDoc}
    */
   @Override

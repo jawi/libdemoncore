@@ -127,14 +127,6 @@ public class TriggerMidTerm extends AbstractTriggerOperationTerm
   }
 
   /**
-   * @return
-   */
-  final TriggerPairTerm[] getTerms()
-  {
-    return new TriggerPairTerm[] { this.termA, this.termB, this.termC, this.termD };
-  }
-
-  /**
    * {@inheritDoc}
    */
   @Override

@@ -72,16 +72,31 @@ public class TestUI extends JFrame
 
     final TriggerSequenceState seqState = new TriggerSequenceState();
     seqState.setStateNumber( 1 );
+
     final TriggerSum captureTerms = seqState.getTriggerSum( TriggerStateTerm.CAPTURE );
-    captureTerms.getPairTerms()[0].getTermA().setEnabled();
-    captureTerms.getPairTerms()[0].getTermB().setInverted();
-    captureTerms.getPairTerms()[0].setOperation( TriggerOperation.AND );
-    captureTerms.getPairTerms()[1].getTermB().setEnabled();
-    captureTerms.getPairTerms()[1].setOperation( TriggerOperation.OR );
-    captureTerms.getMidTerms()[0].setOperation( TriggerOperation.OR );
+
+    TriggerFinalTerm finalTerm = captureTerms.getFinalTerm();
+    TriggerMidTerm midTermA = finalTerm.getTermA();
+    midTermA.setOperation( TriggerOperation.OR );
+
+    TriggerPairTerm pairTermA = midTermA.getTermA();
+    pairTermA.setOperation( TriggerOperation.AND );
+    pairTermA.getTermA().setEnabled();
+    pairTermA.getTermB().setInverted();
+
+    TriggerPairTerm pairTermB = midTermA.getTermB();
+    pairTermB.setOperation( TriggerOperation.OR );
+    pairTermB.getTermB().setEnabled();
+
     final TriggerSum hitTerms = seqState.getTriggerSum( TriggerStateTerm.HIT );
-    hitTerms.getPairTerms()[0].getTermA().setEnabled();
-    hitTerms.getPairTerms()[0].setOperation( TriggerOperation.ANY );
+
+    finalTerm = hitTerms.getFinalTerm();
+    midTermA = finalTerm.getTermA();
+    midTermA.setOperation( TriggerOperation.OR );
+
+    pairTermA = midTermA.getTermA();
+    pairTermA.setOperation( TriggerOperation.ANY );
+    pairTermA.getTermA().setEnabled();
 
     // getContentPane().add( new TriggerSumPanel( TriggerMode.STATE ) );
     getContentPane().add( new TriggerSequencePanel( TriggerMode.STATE, seqState ) );

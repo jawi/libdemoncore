@@ -96,14 +96,6 @@ public class TriggerPairTerm extends AbstractTriggerOperationTerm
   }
 
   /**
-   * @return
-   */
-  final AbstractTriggerTerm[] getTerms()
-  {
-    return new AbstractTriggerTerm[] { this.termA, this.termB };
-  }
-
-  /**
    * {@inheritDoc}
    */
   @Override

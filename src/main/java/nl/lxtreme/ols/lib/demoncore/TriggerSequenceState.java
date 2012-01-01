@@ -72,7 +72,11 @@ public final class TriggerSequenceState implements ITriggerVisitable
    */
   public TriggerSequenceState( final TriggerSequenceState aInitial )
   {
-    this.sums = Utils.deepCopy( aInitial.sums );
+    this.sums = new TriggerSum[3];
+    for ( int i = 0; i < this.sums.length; i++ )
+    {
+      this.sums[i] = new TriggerSum( aInitial.sums[i] );
+    }
 
     this.stateNumber = aInitial.stateNumber;
     this.lastState = aInitial.lastState;

@@ -423,59 +423,52 @@ public class TriggerSumPanel extends JPanel
    */
   private void initPanel()
   {
-    int count = this.model.getInputTerms().length;
-    assert ( count % 2 ) == 0 : "Internal error: input stage names not a multiple of two!";
+    TriggerFinalTerm ft = this.model.getFinalTerm();
+
+    TriggerMidTerm[] mts = { ft.getTermA(), ft.getTermB() };
+    TriggerPairTerm[] pts = { mts[0].getTermA(), mts[0].getTermB(), mts[0].getTermC(), mts[0].getTermD(), //
+        mts[1].getTermA(), mts[1].getTermB(), mts[1].getTermC(), mts[1].getTermD() };
+    AbstractTriggerTerm[] tts = { pts[0].getTermA(), pts[0].getTermB(), pts[1].getTermA(), pts[1].getTermB(),
+        pts[2].getTermA(), pts[2].getTermB(), pts[3].getTermA(), pts[3].getTermB(), pts[4].getTermA(),
+        pts[4].getTermB(), pts[5].getTermA(), pts[5].getTermB(), pts[6].getTermA(), pts[6].getTermB(),
+        pts[7].getTermA(), pts[7].getTermB() };
 
     Dimension maxSize = new Dimension( 0, 0 );
 
-    this.inputTerms = new UIElement[count];
-    for ( int i = 0; i < count; i++ )
+    this.inputTerms = new UIElement[tts.length];
+    for ( int i = 0; i < this.inputTerms.length; i++ )
     {
-      final AbstractTriggerTerm term = this.model.getInputTerms()[i];
+      this.inputTerms[i] = new UIElement( new InputTermPanel( tts[i] ) );
+    }
 
-      final InputTermPanel component = new InputTermPanel( term );
+    this.pairTerms = new UIElement[pts.length];
+    for ( int i = 0, j = 0; j < this.pairTerms.length; i += 2, j++ )
+    {
+      this.pairTerms[j] = new UIElement( new OperationPanel( pts[j] ), this.inputTerms[i], this.inputTerms[i + 1] );
+    }
 
-      Dimension size = component.getMinimumSize();
+    this.midTerms = new UIElement[mts.length];
+    for ( int i = 0, j = 0; j < this.midTerms.length; i += 4, j++ )
+    {
+      this.midTerms[j] = new UIElement( new OperationPanel( mts[j] ), this.pairTerms[i], this.pairTerms[i + 1],
+          this.pairTerms[i + 2], this.pairTerms[i + 3] );
+    }
+
+    this.finalTerm = new UIElement( new OperationPanel( ft ), this.midTerms );
+
+    // Make all input stage buttons equally wide...
+    for ( UIElement inputTerm : this.inputTerms )
+    {
+      Dimension size = inputTerm.component.getMinimumSize();
       if ( size.width > maxSize.width )
       {
         maxSize = size;
       }
-      this.inputTerms[i] = new UIElement( component );
     }
-
-    // Make all input stage buttons equally wide...
     for ( UIElement inputStage : this.inputTerms )
     {
       inputStage.component.setMinimumSize( maxSize );
       inputStage.component.setPreferredSize( maxSize );
     }
-
-    count >>= 1; // half the number of inputs
-
-    this.pairTerms = new UIElement[count];
-    for ( int i = 0, j = 0; i < count; i++ )
-    {
-      final AbstractTriggerOperationTerm term = this.model.getPairTerms()[i];
-      final OperationPanel component = new OperationPanel( term );
-
-      this.pairTerms[i] = new UIElement( component, this.inputTerms[j++], this.inputTerms[j++] );
-    }
-
-    count >>= 2; // quarter the number of pairs
-
-    this.midTerms = new UIElement[count];
-    for ( int i = 0, j = 0; i < count; i++ )
-    {
-      final AbstractTriggerOperationTerm term = this.model.getMidTerms()[i];
-      final OperationPanel component = new OperationPanel( term );
-
-      this.midTerms[i] = new UIElement( component, this.pairTerms[j++], this.pairTerms[j++], this.pairTerms[j++],
-          this.pairTerms[j++] );
-    }
-
-    final AbstractTriggerOperationTerm term = this.model.getFinalTerm();
-    final OperationPanel component = new OperationPanel( term );
-
-    this.finalTerm = new UIElement( component, this.midTerms[0], this.midTerms[1] );
   }
 }
